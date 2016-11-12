@@ -1,0 +1,22 @@
+<header>
+    <div id="nav-menu">
+        <div class="logo">
+            <h1><a href="/" class="logo">Hotel Management</a><h1>
+        </div>
+        <nav>
+            <ul class="navbar">
+                <li class = "nav-button"><button class="nav-button" onclick="location.href='/manage/hotels'" >Hotels</button></li>
+                <li class = "nav-button"><button class="nav-button" onclick="location.href='/manage/rooms'">Rooms</button></li>
+                <li class = "nav-button"><button class="nav-button" onclick="location.href='/manage/staff'">Staff</button></li>
+                <li class = "nav-button"><button class="nav-button" onclick="location.href='/manage/shifts'" >Shifts</button></li>
+                <li class = "nav-button"><button class="nav-button" onclick="location.href='/manage/discounts'" >Discounts</button></li>
+                <li class = "nav-button"><button class="nav-button" onclick="location.href='/manage/reservations'" >Reservations</button></li>
+                <li class = "nav-button"><button class="nav-button" onclick="location.href='/manage/clients'" >Clients</button></li>
+                <li class = "nav-button"><button class="nav-button" onclick="location.href='/manage/users'" >Users</button></li>
+                <% if(user != undefined) {%>
+                <% } %>
+            </ul>
+        </nav>
+
+    </div>
+</header>
