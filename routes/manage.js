@@ -2,8 +2,6 @@ var express = require('express');
 var router = express.Router();
 var query = require('../pgSetup');
 
-
-/* GET home page. */
 router.get('/', function(req, res, next) {
     query('SELECT * FROM public."Hotel"', function(err, rows, result) {
         if(err) {
@@ -31,8 +29,6 @@ router.post('/hotels/create', function (req, res) {
     });
 });
 router.get('/hotels/:page', function(req, res, next) {
-    console.log("rows: " + req.app.locals.rowsPerPage);
-    console.log("req.params.page: " + req.params.page);
     var pagination = [req.app.locals.rowsPerPage, (req.params.page - 1) * req.app.locals.rowsPerPage];
     query('SELECT *, count(*) OVER() AS full_count FROM public."Hotel" LIMIT $1 OFFSET $2', pagination, function(err, rows, result) {
         if(err) {
@@ -42,15 +38,17 @@ router.get('/hotels/:page', function(req, res, next) {
     });
 });
 router.get('/hotels', function(req, res, next) {
-    query('SELECT * FROM public."Hotel"', function(err, rows, result) {
+    res.redirect('/manage/hotels/1');
+});
+router.get('/hotels/remove/:id', function(req, res) {
+    var id = [req.params.id];
+    query('DELETE FROM "Hotel" WHERE hotel_id=$1', id ,function(err, rows, result) {
         if(err) {
             console.error(err);
         }
-        // console.log(rows);
-        res.render('manage/hotels', { title: 'Hotel management', data: rows, column_names: ['Id', 'Name', 'Description', '     Stars', 'Country']});
+        res.redirect('/manage/hotels/1');
     });
 });
-
 
 
 

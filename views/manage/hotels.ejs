@@ -19,7 +19,7 @@
 <content>
     <div class="container generic-table">
         <div style="clear: both">
-            <h2 style="float: left"> <%=title%> </h2>
+            <h1 style="float: left"> <%=title%> </h1>
             <form action="/manage/pageRowsUpdate" method="POST">
                 <select class="rows-per-page-selector" name="rowsPerPage" id="rows-per-page" onchange="this.form.submit()">
                     <option <%if (rowsPerPage==1) {%> selected <%}%>  >1</option>
@@ -55,8 +55,6 @@
             <tbody>
             <%for(var i=0; i<data.length; ++i) {%>
             <tr>
-                <!--['hotel_id', 'name', 'description', 'stars', 'country_code']-->
-
                 <th> <%=data[i]['hotel_id']%> </th>
                 <th> <%=data[i]['name']%> </th>
                 <th> <%=data[i]['description']%> </th>
@@ -78,8 +76,8 @@
 
                 </th>
                 <th style="min-width: 150px"><span class="bfh-countries" data-country=<%=data[i]['country_code']%> data-flags="true"></span></th>
-                <th class="fit"><button class="push-button" onclick="window.location.href='/manage/hotels/edit/' + '<%=i%>'">Edit</button></th>
-                <th class="fit"><button class="push-button" onclick="window.location.href='/manage/hotels/remove/' + '<%=i%>'">Remove</button></th>
+                <th class="fit"><button class="push-button" onclick="window.location.href='/manage/hotels/edit/' + '<%=data[i]['hotel_id']%>'">Edit</button></th>
+                <th class="fit"><button class="push-button" onclick="window.location.href='/manage/hotels/remove/' + '<%=data[i]['hotel_id']%>'">Remove</button></th>
             </tr>
             <%}%>
             </tbody>
