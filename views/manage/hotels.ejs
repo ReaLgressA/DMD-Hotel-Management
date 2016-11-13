@@ -18,7 +18,31 @@
 <% include ../templates/header_m.ejs %>
 <content>
     <div class="container generic-table">
-        <h2> <%=title%> </h2>
+        <div style="clear: both">
+            <h2 style="float: left"> <%=title%> </h2>
+            <form action="/manage/pageRowsUpdate" method="POST">
+                <select class="rows-per-page-selector" name="rowsPerPage" id="rows-per-page" onchange="this.form.submit()">
+                    <option <%if (rowsPerPage==1) {%> selected <%}%>  >1</option>
+                    <option <%if (rowsPerPage==5) {%> selected <%}%>  >5</option>
+                    <option <%if (rowsPerPage==10) {%> selected <%}%> >10</option>
+                    <option <%if (rowsPerPage==20) {%> selected <%}%> >20</option>
+                    <option <%if (rowsPerPage==50) {%> selected <%}%> >50</option>
+                    <option <%if (rowsPerPage==100) {%> selected <%}%> >100</option>
+                    <option <%if (rowsPerPage==250) {%> selected <%}%> >250</option>
+                </select>
+                <label class="rows-per-page-selector" for="rows-per-page">Rows per page: </label>
+            </form>
+        </div>
+
+        <div class="pagination">
+            <%if(pageId > 1) { var prevPage = parseInt(pageId) - 1;%> <a href="/manage/hotels/<%=prevPage%>" class="ui-icon ui-icon-arrow-1-w big-ui-icon"></a> <%}%>
+            <% var startPage = parseInt(pageId) - 5;
+            for(var i = startPage > 1 ? startPage : 1, j = 0; i < rowsTotal / rowsPerPage + 1 && j < 10; ++i, ++j) {%>
+            <a href="/manage/hotels/<%=i%>" <%if(i == pageId) {%>style="text-decoration: underline;"<%}%> ><%=i%></a>&nbsp;
+            <%}%>
+            <%if(pageId <= rowsTotal / rowsPerPage) { var nextPage = parseInt(pageId) + 1;%> <a href="/manage/hotels/<%=nextPage%>" class="ui-icon ui-icon-arrow-1-e big-ui-icon"></a> <%}%>
+        </div>
+
         <table class="table table-hover">
             <thead>
             <tr>

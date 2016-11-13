@@ -13,8 +13,34 @@
     <script src="/bootstrap/js/bootstrap.min.js" type="text/javascript"></script>
     <script src="/jquery-ui/jquery-ui.min.js" type="text/javascript"></script>
     <script src="/form_helpers/js/bootstrap-formhelpers.min.js" type="text/javascript"></script>
+
+    <%if(error) {%>
+    <script>
+        $( function() {
+            $( "#dialog" ).dialog({
+                modal: true,
+                buttons: {
+                    Ok: function() {
+                        $( this ).dialog( "close" );
+                    }
+                }
+            });
+        } );
+    </script>
+    <%}%>
 </head>
 <body>
+
+<%if(error) {%>
+<div id="dialog" title="Error">
+    <p>
+        <span class="ui-icon  ui-icon-alert " style="float:left; margin:0 7px 50px 0;"></span>
+        <%=error%>
+    </p>
+</div>
+<%}%>
+
+
 <% include ../templates/header_m.ejs %>
 <content>
     <div class="container">

@@ -27,6 +27,7 @@ app.use('/manage', manage);
 //Initialize local vars
 app.locals.user = undefined;
 app.locals.cart = [];//temp
+app.locals.rowsPerPage = 5;
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

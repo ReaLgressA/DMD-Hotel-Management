@@ -12,47 +12,50 @@ router.get('/', function(req, res, next) {
         res.render('manage', { title: 'Hotel management', data: rows, column_names: result.fields });
     });
 });
-
+router.post('/pageRowsUpdate', function (req, res, next) {
+    req.app.locals.rowsPerPage = req.body['rowsPerPage'];
+    res.redirect('/manage/hotels/1');
+});
+router.get('/hotels/create', function(req, res) {
+    res.render('manage/hotels_create', { error: undefined });
+});
+router.post('/hotels/create', function (req, res) {
+    var postArray = [req.body['name'], req.body['desc'], req.body['rating'], req.body['country']];
+    query('INSERT INTO public."Hotel" (name, description, stars, country_code) VALUES($1, $2, $3, $4)', postArray, function(err, rows, result) {
+        if(err) {
+            console.error(err);
+            res.render('manage/hotels_create', { error : err });
+        } else {
+            res.redirect('/manage/hotels/1');
+        }
+    });
+});
+router.get('/hotels/:page', function(req, res, next) {
+    console.log("rows: " + req.app.locals.rowsPerPage);
+    console.log("req.params.page: " + req.params.page);
+    var pagination = [req.app.locals.rowsPerPage, (req.params.page - 1) * req.app.locals.rowsPerPage];
+    query('SELECT *, count(*) OVER() AS full_count FROM public."Hotel" LIMIT $1 OFFSET $2', pagination, function(err, rows, result) {
+        if(err) {
+            console.error(err);
+        }
+        res.render('manage/hotels', { title: 'Hotel management', data: rows, column_names: ['Id', 'Name', 'Description', '     Stars', 'Country'], pageId: req.params.page, rowsTotal: rows[0]['full_count'] });
+    });
+});
 router.get('/hotels', function(req, res, next) {
     query('SELECT * FROM public."Hotel"', function(err, rows, result) {
         if(err) {
             console.error(err);
         }
+        // console.log(rows);
         res.render('manage/hotels', { title: 'Hotel management', data: rows, column_names: ['Id', 'Name', 'Description', '     Stars', 'Country']});
     });
 });
-router.get('/hotels/create', function(req, res) {
-    query('SELECT * FROM public."Hotel"', function(err, rows, result) {
-        if(err) {
-            console.error(err);
-        }
-        res.render('manage/hotels_create', { column_names: result.fields });
-    });
-});
-router.post('/hotels/create', function (req, res) {
-    var post = {
-        name: req.body['name'],
-        description: req.body['desc'],
-        stars: req.body['rating'],
-        country_code: req.body['country']
-    };
-    var postArray = [req.body['name'], req.body['desc'], req.body['rating'], req.body['country']];
-    console.log(post);
-    query('INSERT INTO public."Hotel" (name, description, stars, country_code) VALUES($1, $2, $3, $4)', postArray, function(err, rows, result) {
-        if(err) {
-            console.error(err);
-        } else {
-            res.redirect('/manage/hotels');
-        }
-    });
-    // sql.query('INSERT INTO GadgetType SET ?', post, function (err, results, fields) {
-    //     if(err == null) {
-    //         res.redirect('/gadgets/types');
-    //     } else {
-    //         res.render('status', { status: "Not created error: " + err });
-    //     }
-    // });
-});
+
+
+
+
+
+
 
 
 
