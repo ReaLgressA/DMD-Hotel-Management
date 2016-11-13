@@ -102,7 +102,7 @@ button.nav-button:hover::after {
     transform: translateY(-80%);
 }
 
-button.push-button {
+button.push-button, input[type=submit], input[type=button] {
     position: relative;
     width: 80px;
     height: 40px;
@@ -119,10 +119,10 @@ button.push-button {
     font-family: "Helvetica-Regular";
     font-size: 18px;
 }
-button.push-button:active {
+button.push-button:active, input[type=submit]:active,  input[type=button]:active  {
     color: #ccc;
 }
-button.push-button:hover {
+button.push-button:hover, input[type=submit]:hover, input[type=button]:hover  {
     background: #e59400;
 }
 
@@ -171,8 +171,7 @@ button.push-button:hover {
 
 .generic-edit-block {
     display: block;
-    padding-top: 64px;
-    color: #fefefe;
+    padding-top: 74px;
     margin-left: auto;
     margin-right: auto;
 }

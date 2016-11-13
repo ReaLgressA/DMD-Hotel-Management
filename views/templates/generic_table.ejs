@@ -1,0 +1,24 @@
+<div class="container generic-table">
+    <h2> <%=title%> </h2>
+    <table class="table table-hover">
+        <thead>
+        <tr>
+            <%for(var i=0; i<column_names.length; ++i) {%>
+            <th><%=column_names[i].name%></th>
+            <%}%>
+            <th class="fit"><button class="push-button" onclick="window.location.href='/manage/hotels/create'">Create</button></th>
+        </tr>
+        </thead>
+        <tbody>
+        <%for(var i=0; i<data.length; ++i) {%>
+        <tr>
+            <%for(var j=0; j<column_names.length; ++j) {%>
+            <th><%=data[i][column_names[j].name]%></th>
+            <%}%>
+            <th class="fit"><button class="push-button" onclick="window.location.href='/gadgets/edit/' + '<%=j%>'">Edit</button></th>
+            <th class="fit"><button class="push-button" onclick="window.location.href='/gadgets/remove/' + '<%=j%>'">Remove</button></th>
+        </tr>
+        <%}%>
+        </tbody>
+    </table>
+</div>

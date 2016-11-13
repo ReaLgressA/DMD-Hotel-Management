@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta charset="utf-8">
+    <title>Hotel management system</title>
+    <link rel="stylesheet" href="/bootstrap/css/bootstrap.css">
+    <link rel="stylesheet" href="/jquery-ui/jquery-ui.min.css"/>
+    <link rel="stylesheet" href="/stylesheets/style_manage.css">
+    <link rel="stylesheet" href="/stylesheets/star-rating.css">
+    <link rel="stylesheet" href="/form_helpers/css/bootstrap-formhelpers.min.css">
+    <script src="/javascripts/jquery-2.2.3.js" type="text/javascript"></script>
+    <script src="/bootstrap/js/bootstrap.min.js" type="text/javascript"></script>
+    <script src="/jquery-ui/jquery-ui.min.js" type="text/javascript"></script>
+    <script src="/form_helpers/js/bootstrap-formhelpers.min.js" type="text/javascript"></script>
+</head>
+<body>
+<% include ../templates/header_m.ejs %>
+<content>
+    <div class="container generic-table">
+        <h2> <%=title%> </h2>
+        <table class="table table-hover">
+            <thead>
+            <tr>
+                <%for(var i=0; i<column_names.length; ++i) {%>
+                <th><%=column_names[i]%></th>
+                <%}%>
+                <th class="fit"><button class="push-button" onclick="window.location.href='/manage/hotels/create'">Create</button></th>
+            </tr>
+            </thead>
+            <tbody>
+            <%for(var i=0; i<data.length; ++i) {%>
+            <tr>
+                <!--['hotel_id', 'name', 'description', 'stars', 'country_code']-->
+
+                <th> <%=data[i]['hotel_id']%> </th>
+                <th> <%=data[i]['name']%> </th>
+                <th> <%=data[i]['description']%> </th>
+                <th>
+                    <div class="form-group">
+                        <fieldset class="rating" disabled style="padding: 0; margin: 0; min-width: 150px">
+                            <input type="radio" <%if (data[i]['stars']==5) {%> checked <%}%> id="star5<%=i%>" name="rating<%=i%>" value=5 /><label class = "full" for="star5<%=i%>" title="5 stars"></label>
+                            <input type="radio" <%if (data[i]['stars']==4.5) {%> checked <%}%> id="star4half<%=i%>" name="rating<%=i%>" value=4.5 /><label class="half" for="star4half<%=i%>" title="4.5 stars"></label>
+                            <input type="radio" <%if (data[i]['stars']==4) {%> checked <%}%> id="star4<%=i%>" name="rating<%=i%>" value=4 /><label class = "full" for="star4<%=i%>" title="4 stars"></label>
+                            <input type="radio" <%if (data[i]['stars']==3.5) {%> checked <%}%> id="star3half<%=i%>" name="rating<%=i%>" value=3.5 /><label class="half" for="star3half<%=i%>" title="3.5 stars"></label>
+                            <input type="radio" <%if (data[i]['stars']==3) {%> checked <%}%> id="star3<%=i%>" name="rating<%=i%>" value=3 /><label class = "full" for="star3<%=i%>" title="3 stars"></label>
+                            <input type="radio" <%if (data[i]['stars']==2.5) {%> checked <%}%> id="star2half<%=i%>" name="rating<%=i%>" value=2.5 /><label class="half" for="star2half<%=i%>" title="2.5 stars"></label>
+                            <input type="radio" <%if (data[i]['stars']==2) {%> checked <%}%> id="star2<%=i%>" name="rating<%=i%>" value=2 /><label class = "full" for="star2<%=i%>" title="2 stars"></label>
+                            <input type="radio" <%if (data[i]['stars']==1.5) {%> checked <%}%> id="star1half<%=i%>" name="rating<%=i%>" value=1.5 /><label class="half" for="star1half<%=i%>" title="1.5 stars"></label>
+                            <input type="radio" <%if (data[i]['stars']==1) {%> checked <%}%> id="star1<%=i%>" name="rating<%=i%>" value=1 /><label class = "full" for="star1<%=i%>" title="1 star"></label>
+                            <input type="radio" <%if (data[i]['stars']==0.5) {%> checked <%}%> id="starhalf<%=i%>" name="rating<%=i%>" value=0.5 /><label class="half" for="starhalf<%=i%>" title="0.5 stars"></label>
+                        </fieldset>
+                    </div>
+
+                </th>
+                <th style="min-width: 150px"><span class="bfh-countries" data-country=<%=data[i]['country_code']%> data-flags="true"></span></th>
+                <th class="fit"><button class="push-button" onclick="window.location.href='/manage/hotels/edit/' + '<%=i%>'">Edit</button></th>
+                <th class="fit"><button class="push-button" onclick="window.location.href='/manage/hotels/remove/' + '<%=i%>'">Remove</button></th>
+            </tr>
+            <%}%>
+            </tbody>
+        </table>
+    </div>
+
+</content>
+<% include ../templates/footer.ejs%>
+</body>
+</html>

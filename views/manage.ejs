@@ -7,38 +7,16 @@
     <link rel="stylesheet" href="/bootstrap/css/bootstrap.css">
     <link rel="stylesheet" href="/jquery-ui/jquery-ui.min.css"/>
     <link rel="stylesheet" href="/stylesheets/style_manage.css">
+    <link rel="stylesheet" href="/form_helpers/css/bootstrap-formhelpers.min.css">
     <script src="/javascripts/jquery-2.2.3.js" type="text/javascript"></script>
     <script src="/bootstrap/js/bootstrap.min.js" type="text/javascript"></script>
     <script src="/jquery-ui/jquery-ui.min.js" type="text/javascript"></script>
+    <script src="/form_helpers/js/bootstrap-formhelpers.min.js" type="text/javascript"></script>
 </head>
 <body>
 <% include templates/header_m.ejs %>
 <content>
-
-    <div class="container generic-table">
-        <h2> <%=title%> </h2>
-        <table class="table table-hover">
-            <thead>
-            <tr>
-                <%for(var i=0; i<column_names.length; ++i) {%>
-                <th><%=column_names[i].name%></th>
-                <%}%>
-                <th class="fit"><button class="push-button" onclick="window.location.href='/gadgets/create'">Create</button></th>
-            </tr>
-            </thead>
-            <tbody>
-            <%for(var i=0; i<data.length; ++i) {%>
-            <tr>
-                <%for(var j=0; j<column_names.length; ++j) {%>
-                <th><%=data[i][column_names[j].name]%></th>
-                <%}%>
-                <th class="fit"><button class="push-button" onclick="window.location.href='/gadgets/edit/' + '<%=j%>'">Edit</button></th>
-                <th class="fit"><button class="push-button" onclick="window.location.href='/gadgets/remove/' + '<%=j%>'">Remove</button></th>
-            </tr>
-            <%}%>
-            </tbody>
-        </table>
-    </div>
+    <% include templates/generic_table.ejs %>
 </content>
 <% include templates/footer.ejs%>
 </body>
