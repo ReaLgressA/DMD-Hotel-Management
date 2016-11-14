@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta charset="utf-8">
+    <title>Hotel management system</title>
+    <link rel="stylesheet" href="/bootstrap/css/bootstrap.css">
+    <link rel="stylesheet" href="/jquery-ui/jquery-ui.min.css"/>
+    <link rel="stylesheet" href="/stylesheets/style_manage.css">
+    <link rel="stylesheet" href="/form_helpers/css/bootstrap-formhelpers.min.css">
+    <link rel="stylesheet" href="/stylesheets/star-rating.css">
+    <script src="/javascripts/jquery-2.2.3.js" type="text/javascript"></script>
+    <script src="/bootstrap/js/bootstrap.min.js" type="text/javascript"></script>
+    <script src="/jquery-ui/jquery-ui.min.js" type="text/javascript"></script>
+    <script src="/form_helpers/js/bootstrap-formhelpers.min.js" type="text/javascript"></script>
+    <%if(error) {%>
+    <script>
+        $( function() {
+            $( "#dialog" ).dialog({
+                modal: true,
+                buttons: {
+                    Ok: function() {
+                        $( this ).dialog( "close" );
+                    }
+                }
+            });
+        } );
+    </script>
+    <%}%>
+</head>
+<body>
+
+<%if(error) {%>
+<div id="dialog" title="Error">
+    <p>
+        <span class="ui-icon  ui-icon-alert " style="float:left; margin:0 7px 50px 0;"></span>
+        <%=error%>
+    </p>
+</div>
+<%}%>
+
+<% include ../templates/header_m.ejs %>
+<content>
+    <div class="container">
+        <form class="details generic-edit-block" method="post" action="/manage/hotels/edit">
+            <input type="hidden" name="hotel_id" value=<%=data['hotel_id']%> />
+            <label for="name">Hotel name</label>
+            <div class=" form-group">
+                <input class="form-control" id="name" type="text" placeholder="Name" name="name" value=<%=data['name']%> required/>
+            </div>
+            <label for="desc">Hotel description</label>
+            <div class=" form-group">
+                <textarea style="resize:none" class="form-control" rows="3" id="desc" type="text" placeholder="Description" name="desc" required><%=data['description']%></textarea>
+            </div>
+            <label for="rating">Star rating</label>
+            <div class="form-group">
+                <fieldset class="rating" value=<%=data['stars']%> required>
+                    <input type="radio" <%if(data['stars'] == 5) {%>checked<%}%> id="star5" name="rating" value=5 /><label class = "full" for="star5" title="5 stars"></label>
+                    <input type="radio" <%if(data['stars'] == 4.5) {%>checked<%}%> id="star4half" name="rating" value=4.5 /><label class="half" for="star4half" title="4.5 stars"></label>
+                    <input type="radio" <%if(data['stars'] == 4) {%>checked<%}%> id="star4" name="rating" value=4 /><label class = "full" for="star4" title="4 stars"></label>
+                    <input type="radio" <%if(data['stars'] == 3.5) {%>checked<%}%> id="star3half" name="rating" value=3.5 /><label class="half" for="star3half" title="3.5 stars"></label>
+                    <input type="radio" <%if(data['stars'] == 3) {%>checked<%}%> id="star3" name="rating" value=3 /><label class = "full" for="star3" title="3 stars"></label>
+                    <input type="radio" <%if(data['stars'] == 2.5) {%>checked<%}%> id="star2half" name="rating" value=2.5 /><label class="half" for="star2half" title="2.5 stars"></label>
+                    <input type="radio" <%if(data['stars'] == 2) {%>checked<%}%> id="star2" name="rating" value=2 /><label class = "full" for="star2" title="2 stars"></label>
+                    <input type="radio" <%if(data['stars'] == 1.5) {%>checked<%}%> id="star1half" name="rating" value=1.5 /><label class="half" for="star1half" title="1.5 stars"></label>
+                    <input type="radio" <%if(data['stars'] == 1) {%>checked<%}%> id="star1" name="rating" value=1 /><label class = "full" for="star1" title="1 star"></label>
+                    <input type="radio" <%if(data['stars'] == 0.5) {%>checked<%}%> id="starhalf" name="rating" value=0.5 /><label class="half" for="starhalf" title="0.5 stars"></label>
+                </fieldset>
+            </div>
+            <label for="country">Country</label>
+            <div class="form-group">
+                <div class="bfh-selectbox bfh-countries" data-country=<%=data['country_code']%> data-flags="true" data-filter="true" data-name="country"></div>
+            </div>
+            <input type="button" onclick="history.back();" value="Back">
+            <input style="float:right" type="submit" value="Apply" name="apply">
+        </form>
+
+    </div>
+</content>
+<% include ../templates/footer.ejs%>
+</body>
+</html>

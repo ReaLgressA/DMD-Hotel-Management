@@ -30,7 +30,7 @@ router.post('/hotels/create', function (req, res) {
 });
 router.get('/hotels/:page', function(req, res, next) {
     var pagination = [req.app.locals.rowsPerPage, (req.params.page - 1) * req.app.locals.rowsPerPage];
-    query('SELECT *, count(*) OVER() AS full_count FROM public."Hotel" LIMIT $1 OFFSET $2', pagination, function(err, rows, result) {
+    query('SELECT *, count(*) OVER() AS full_count FROM "Hotel" ORDER BY hotel_id ASC LIMIT $1 OFFSET $2', pagination, function(err, rows, result) {
         if(err) {
             console.error(err);
         }
@@ -49,8 +49,36 @@ router.get('/hotels/remove/:id', function(req, res) {
         res.redirect('/manage/hotels/1');
     });
 });
+router.get('/hotels/remove/:id', function(req, res) {
+    query('DELETE FROM "Hotel" WHERE hotel_id=$1', [req.params.id],function(err, rows, result) {
+        if(err) {
+            console.error(err);
+        }
+        res.redirect('/manage/hotels/1');
+    });
+});
 
-
+router.get('/hotels/edit/:id', function(req, res) {
+    query('SELECT * FROM "Hotel" WHERE hotel_id=$1', [req.params.id],function(err, rows, result) {
+        if(err) {
+            console.error(err);
+        }
+        console.log(rows[0]);
+        res.render('manage/hotels_edit', {error: err, data: rows[0], column_names: ['Id', 'Name', 'Description', '     Stars', 'Country']});
+    });
+});
+router.post('/hotels/edit', function (req, res) {
+    var postArray = [req.body['name'], req.body['desc'], req.body['rating'], req.body['country'], req.body['hotel_id']];
+    console.log(req.body);
+    query('UPDATE "Hotel" SET name=$1, description=$2, stars=$3, country_code=$4 WHERE hotel_id=$5', postArray, function (err, results, fields) {
+        if(err) {
+            console.error(err);
+            res.render('manage/hotels_edit', { error : err });
+        } else {
+            res.redirect('/manage/hotels/1');
+        }
+    });
+});
 
 
 
@@ -113,14 +141,6 @@ router.get('/users', function(req, res, next) {
             console.error(err);
         }
         res.render('manage', { title: 'User management', data: rows, column_names: result.fields });
-    });
-});
-router.get('/countries', function(req, res, next) {
-    query('SELECT * FROM public."Country"', function(err, rows, result) {
-        if(err) {
-            console.error(err);
-        }
-        res.render('manage', { title: 'Country management', data: rows, column_names: result.fields });
     });
 });
 module.exports = router;
