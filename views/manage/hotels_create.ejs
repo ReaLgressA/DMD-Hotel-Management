@@ -71,18 +71,17 @@
                 <input type="radio" id="starhalf" name="rating" value=0.5 /><label class="half" for="starhalf" title="0.5 stars"></label>
             </fieldset>
         </div>
-
         <label for="country">Country</label>
         <div class="form-group">
             <div class="bfh-selectbox bfh-countries" data-country="US" data-flags="true" data-filter="true" data-name="country"></div>
         </div>
-
+        <label for="city">City</label>
+        <div class=" form-group">
+            <input class="form-control" id="city" type="text" placeholder="City" name="city" required/>
+        </div>
         <input type="button" onclick="history.back();" value="Back">
-
         <input style="float:right" type="submit" value="Apply" name="apply">
     </form>
-
-
     </div>
 </content>
 <% include ../templates/footer.ejs%>

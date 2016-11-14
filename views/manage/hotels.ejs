@@ -76,6 +76,7 @@
 
                 </th>
                 <th style="min-width: 150px"><span class="bfh-countries" data-country=<%=data[i]['country_code']%> data-flags="true"></span></th>
+                <th> <%=data[i]['city']%> </th>
                 <th class="fit"><button class="push-button" onclick="window.location.href='/manage/hotels/edit/' + '<%=data[i]['hotel_id']%>'">Edit</button></th>
                 <th class="fit"><button class="push-button" onclick="window.location.href='/manage/hotels/remove/' + '<%=data[i]['hotel_id']%>'">Remove</button></th>
             </tr>

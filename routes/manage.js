@@ -2,6 +2,8 @@ var express = require('express');
 var router = express.Router();
 var query = require('../pgSetup');
 
+var hotel_col_names = ['Id', 'Name', 'Description', '     Stars', 'Country', 'City'];
+
 router.get('/', function(req, res, next) {
     query('SELECT * FROM public."Hotel"', function(err, rows, result) {
         if(err) {
@@ -18,8 +20,9 @@ router.get('/hotels/create', function(req, res) {
     res.render('manage/hotels_create', { error: undefined });
 });
 router.post('/hotels/create', function (req, res) {
-    var postArray = [req.body['name'], req.body['desc'], req.body['rating'], req.body['country']];
-    query('INSERT INTO public."Hotel" (name, description, stars, country_code) VALUES($1, $2, $3, $4)', postArray, function(err, rows, result) {
+    var postArray = [req.body['name'], req.body['desc'], req.body['rating'], req.body['country'], req.body['city']];
+    console.log(postArray);
+    query('INSERT INTO "Hotel" (name, description, stars, country_code, city) VALUES($1, $2, $3, $4, $5)', postArray, function(err, rows, result) {
         if(err) {
             console.error(err);
             res.render('manage/hotels_create', { error : err });
@@ -34,7 +37,7 @@ router.get('/hotels/:page', function(req, res, next) {
         if(err) {
             console.error(err);
         }
-        res.render('manage/hotels', { title: 'Hotel management', data: rows, column_names: ['Id', 'Name', 'Description', '     Stars', 'Country'], pageId: req.params.page, rowsTotal: rows[0]['full_count'] });
+        res.render('manage/hotels', { title: 'Hotel management', data: rows, column_names: hotel_col_names, pageId: req.params.page, rowsTotal: rows[0]['full_count'] });
     });
 });
 router.get('/hotels', function(req, res, next) {
@@ -64,16 +67,16 @@ router.get('/hotels/edit/:id', function(req, res) {
             console.error(err);
         }
         console.log(rows[0]);
-        res.render('manage/hotels_edit', {error: err, data: rows[0], column_names: ['Id', 'Name', 'Description', '     Stars', 'Country']});
+        res.render('manage/hotels_edit', {error: err, data: rows[0]});
     });
 });
 router.post('/hotels/edit', function (req, res) {
-    var postArray = [req.body['name'], req.body['desc'], req.body['rating'], req.body['country'], req.body['hotel_id']];
+    var post = [req.body['name'], req.body['desc'], req.body['rating'], req.body['country'], req.body['city'], req.body['hotel_id']];
     console.log(req.body);
-    query('UPDATE "Hotel" SET name=$1, description=$2, stars=$3, country_code=$4 WHERE hotel_id=$5', postArray, function (err, results, fields) {
+    query('UPDATE "Hotel" SET name=$1, description=$2, stars=$3, country_code=$4, city=$5 WHERE hotel_id=$6', post, function (err, results, fields) {
         if(err) {
             console.error(err);
-            res.render('manage/hotels_edit', { error : err });
+            res.render('manage/hotels_edit', { error : err, data: {hotel_id: post[5], name: post[0], description: post[1], stars: post[2], country_code: post[3], city: post[4]} });
         } else {
             res.redirect('/manage/hotels/1');
         }
