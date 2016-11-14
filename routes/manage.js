@@ -82,11 +82,9 @@ var getRoomTypes = function (callback) {
             console.log(err);
             callback([]);
         }
-        console.log(rows);
         callback(rows);
     });
 };
-
 router.get('/rooms/create', function(req, res) {
     getRoomTypes(function (room_types) {
         res.render('manage/rooms_create', { error: undefined,  room_types: room_types });
@@ -156,16 +154,141 @@ router.post('/rooms/edit', function (req, res) {
 
 
 //STAFF
+var staff_col_names = ['Position', 'Name', 'Surname', 'Gender', 'SSN code', 'Salary'];
 
+var getStaffRoles = function (callback) {
+    query('SELECT * FROM "Staff_role"', function(err, rows, result) {
+        if(err) {
+            console.log(err);
+            callback([]);
+        }
+        callback(rows);
+    });
+};
 
-router.get('/staff', function(req, res, next) {
-    query('SELECT * FROM public."Staff"', function(err, rows, result) {
+router.get('/staff/create', function(req, res) {
+    getStaffRoles(function (staff_roles) {
+        res.render('manage/staff_create', { error: undefined,  staff_roles: staff_roles });
+    });
+});
+router.post('/staff/create', function (req, res) {
+    var post = [req.body['hotel_id'], req.body['role_id'], req.body['first_name'], req.body['last_name'], req.body['gender'], req.body['ssn_code'], req.body['salary']];
+    query('INSERT INTO "Staff" (hotel_id, role_id, first_name, last_name, gender, ssn_code, salary) VALUES($1, $2, $3, $4, $5, $6, $7)', post, function(err, rows, result) {
+        if(err) {
+            console.error(err);
+            getStaffRoles(function (staff_roles) {
+                res.render('manage/staff_create', { error : err,  staff_roles: staff_roles });
+            });
+        } else {
+            res.redirect('/manage/staff/1');
+        }
+    });
+});
+router.get('/staff/:page', function(req, res, next) {
+    var args = [req.app.locals.curHotel['hotel_id'], req.app.locals.rowsPerPage, (req.params.page - 1) * req.app.locals.rowsPerPage];
+    query('SELECT *, count(*) OVER() AS full_count FROM "Staff" WHERE hotel_id=$1 ORDER BY last_name, first_name ASC LIMIT $2 OFFSET $3', args, function(err, rows, result) {
         if(err) {
             console.error(err);
         }
-        res.render('manage', { title: 'Staff management', data: rows, column_names: result.fields });
+        getStaffRoles( function (staff_roles) {
+            res.render('manage/staff', { title: 'Staff  management: ' + req.app.locals.curHotel['name'], staff_roles: staff_roles, data: rows, column_names: staff_col_names, pageName: 'staff', pageId: req.params.page, rowsTotal: (rows != undefined && rows.length > 0) ? rows[0]['full_count'] : 0});
+        } );
     });
 });
+router.get('/staff', function(req, res, next) {
+    res.redirect('/manage/staff/1');
+});
+router.get('/staff/remove/:id', function(req, res) {
+    query('DELETE FROM "Staff" WHERE staff_id=$1', [req.params.id],function(err, rows, result) {
+        if(err) {
+            console.error(err);
+        }
+        res.redirect('/manage/staff/1');
+    });
+});
+router.get('/staff/edit/:id', function(req, res) {
+    query('SELECT * FROM "Staff" WHERE staff_id=$1', [req.params.id],function(err, rows, result) {
+        if(err) {
+            console.error(err);
+        }
+        getStaffRoles( function (staff_roles) {
+            console.log(rows[0]);
+            res.render('manage/staff_edit', {error: err, data: rows[0], staff_roles: staff_roles});
+        } );
+    });
+});
+router.post('/staff/edit', function (req, res) {
+    var post = [req.body['role_id'], req.body['first_name'], req.body['last_name'], req.body['gender'], req.body['ssn_code'], req.body['salary'], req.body['staff_id']];
+    query('UPDATE "Staff" SET role_id=$1, first_name=$2, last_name=$3, gender=$4, ssn_code=$5, salary=$6 WHERE staff_id=$7', post, function(err, rows, result) {
+        if(err) {
+            console.error(err);
+            getStaffRoles( function (staff_roles) {
+                res.render('manage/staff_edit', { error : err, staff_roles: staff_roles, data: {staff_id: post[6], role_id: post[0],
+                    first_name: post[1], last_name: post[2], gender: post[3], ssn_code: post[4], salary: post[5]} });
+            } );
+        } else {
+            res.redirect('/manage/staff/1');
+        }
+    });
+});
+
+
+
+
+
+//SHIFTS
+var shifts_col_names = ['Date', 'Staff member'];
+
+var getStaffMembers = function (callback) {
+    query('SELECT * FROM "Staff" WHERE hotel_id=$1', [req.app.locals.curHotel['hotel_id'] function(err, rows, result) {
+        if(err) {
+            console.log(err);
+            callback([]);
+        }
+        callback(rows);
+    });
+};
+
+router.get('/shifts/create', function(req, res) {
+    getStaffMembers(function (staff_members) {
+        res.render('manage/staff_create', { error: undefined,  staff_members: staff_members });
+    });
+});
+router.post('/shifts/create', function (req, res) {
+    var post = [req.body['hotel_id'], req.body['role_id'], req.body['first_name'], req.body['last_name'], req.body['gender'], req.body['ssn_code'], req.body['salary']];
+    query('INSERT INTO "Staff" (hotel_id, role_id, first_name, last_name, gender, ssn_code, salary) VALUES($1, $2, $3, $4, $5, $6, $7)', post, function(err, rows, result) {
+        if(err) {
+            console.error(err);
+            getStaffMembers(function (staff_members) {
+                res.render('manage/staff_create', { error : err,  staff_members: staff_members });
+            });
+        } else {
+            res.redirect('/manage/staff/1');
+        }
+    });
+});
+router.get('/shifts/:page', function(req, res, next) {
+    var args = [req.app.locals.curHotel['hotel_id'], req.app.locals.rowsPerPage, (req.params.page - 1) * req.app.locals.rowsPerPage];
+    query('SELECT "Shift".staff_id, date, count(*) OVER() AS full_count FROM "Shift", "Staff" WHERE "Staff".staff_id = "Shift".staff_id AND "Staff".hotel_id=$1 ORDER BY date, first_name DESC LIMIT $2 OFFSET $3', args, function(err, rows, result) {
+        if(err) {
+            console.error(err);
+        }
+        getStaffMembers( function (staff_members) {
+            res.render('manage/staff', { title: 'Shift management: ' + req.app.locals.curHotel['name'], staff_members: staff_members, data: rows, column_names: shifts_col_names, pageName: 'shifts', pageId: req.params.page, rowsTotal: (rows != undefined && rows.length > 0) ? rows[0]['full_count'] : 0});
+        } );
+    });
+});
+router.get('/staff', function(req, res, next) {
+    res.redirect('/manage/staff/1');
+});
+
+
+
+
+
+
+
+
 router.get('/shifts', function(req, res, next) {
     query('SELECT * FROM public."Shift"', function(err, rows, result) {
         if(err) {
