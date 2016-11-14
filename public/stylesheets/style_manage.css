@@ -50,6 +50,12 @@ li.nav-button {
     float: left;
     margin-left: 0;
 }
+.navbar-info {
+    text-align: right;
+    float: right;
+    width: auto;
+    height: auto;
+}
 .sign-in-button {
     float: right;
     margin-top: 12px;
@@ -122,6 +128,9 @@ button.push-button, input[type=submit], input[type=button] {
 }
 button.push-button:active, input[type=submit]:active,  input[type=button]:active  {
     color: #ccc;
+}
+button.push-button:disabled, button.nav-button:disabled, input[type=submit]:disabled, input[type=button]:disabled {
+    background: #e59400;
 }
 button.push-button:hover, input[type=submit]:hover, input[type=button]:hover  {
     background: #e59400;

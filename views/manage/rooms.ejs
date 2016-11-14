@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta charset="utf-8">
+    <title>Hotel management system</title>
+    <link rel="stylesheet" href="/bootstrap/css/bootstrap.css">
+    <link rel="stylesheet" href="/jquery-ui/jquery-ui.min.css"/>
+    <link rel="stylesheet" href="/stylesheets/style_manage.css">
+    <link rel="stylesheet" href="/stylesheets/star-rating.css">
+    <link rel="stylesheet" href="/form_helpers/css/bootstrap-formhelpers.min.css">
+    <script src="/javascripts/jquery-2.2.3.js" type="text/javascript"></script>
+    <script src="/bootstrap/js/bootstrap.min.js" type="text/javascript"></script>
+    <script src="/jquery-ui/jquery-ui.min.js" type="text/javascript"></script>
+    <script src="/form_helpers/js/bootstrap-formhelpers.min.js" type="text/javascript"></script>
+</head>
+<body>
+<% include ../templates/header_m.ejs %>
+<content>
+    <div class="container generic-table">
+
+        <% include ../templates/pagination.ejs %>
+
+        <table class="table table-hover">
+            <thead>
+            <tr>
+                <%for(var i=0; i<column_names.length; ++i) {%>
+                <th><%=column_names[i]%></th>
+                <%}%>
+                <th></th>
+                <th class="fit"><button class="push-button" onclick="window.location.href='/manage/rooms/create'">Create</button></th>
+            </tr>
+            </thead>
+            <tbody>
+            <%for(var i=0; i<data.length; ++i) {%>
+            <tr>
+                <th> <%=data[i]['number']%> </th>
+                <th> <%=room_types[data[i]['room_type_id'] - 1]['type_name']%> </th>
+                <th> <%=room_types[data[i]['room_type_id'] - 1]['capacity']%> </th>
+                <th> <%=data[i]['price']%>$ </th>
+                <th>
+                    <%if(data[i]['wifi'] == true) {%><p>free wi-fi</p><%}%>
+                    <%if(data[i]['smoke'] == true) {%><p>smoking allowed</p><%}%>
+                    <%if(data[i]['tv'] == true) {%><p>TV</p><%}%>
+                    <%if(data[i]['conditioner'] == true) {%><p>conditioner</p><%}%>
+                </th>
+                <th class="fit"><button class="push-button" onclick="window.location.href='/manage/rooms/edit/' + '<%=data[i]['room_id']%>'">Edit</button></th>
+                <th class="fit"><button class="push-button" onclick="window.location.href='/manage/rooms/remove/' + '<%=data[i]['room_id']%>'">Remove</button></th>
+            </tr>
+            <%}%>
+            </tbody>
+        </table>
+    </div>
+
+</content>
+<% include ../templates/footer.ejs%>
+</body>
+</html>

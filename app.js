@@ -28,6 +28,8 @@ app.use('/manage', manage);
 app.locals.user = undefined;
 app.locals.cart = [];//temp
 app.locals.rowsPerPage = 10;
+app.locals.curHotel = undefined;
+
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

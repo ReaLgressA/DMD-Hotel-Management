@@ -43,10 +43,11 @@
 <content>
     <div class="container">
         <form class="details generic-edit-block" method="post" action="/manage/hotels/edit">
+            <div class=" form-"><h2 style="float: left; width: 100%"> Edit hotel </h2></div>
             <input type="hidden" name="hotel_id" value=<%=data['hotel_id']%> />
             <label for="name">Hotel name</label>
             <div class=" form-group">
-                <input class="form-control" id="name" type="text" placeholder="Name" name="name" value=<%=data['name']%> required/>
+                <input class="form-control" id="name" type="text" placeholder="Name" name="name" value='<%=data['name']%>'' required/>
             </div>
             <label for="desc">Hotel description</label>
             <div class=" form-group">
