@@ -261,7 +261,6 @@ router.post('/shifts/create', function (req, res) {
                 res.render('manage/shifts_create', { error : err,  staff_members: staff_members });
             });
         } else {
-            console.log("OK");
             res.redirect('/manage/shifts/1');
         }
     });
@@ -292,23 +291,22 @@ router.get('/shifts/remove/:id', function(req, res) {
     });
 });
 router.get('/shifts/edit/:id', function(req, res) {
-    query('SELECT * FROM "Shift" WHERE staff_id=$1 AND date=$2', [req.params.id, req.query.date],function(err, rows, result) {
+    query('SELECT staff_id, TO_CHAR(date, $3) AS "date" FROM "Shift" WHERE staff_id=$1 AND "date"=$2', [req.params.id, req.query.date, "YYYY-MM-DD"],function(err, rows, result) {
         if(err) {
             console.error(err);
         }
         getStaffMembers(req, function (staff_members) {
-            console.log(rows[0]);
             res.render('manage/shifts_edit', {error: err, data: rows[0], staff_members: staff_members});
         } );
     });
 });
 router.post('/shifts/edit', function (req, res) {
     var post = [req.body['date'], req.body['staff_id'], req.body['old_date'], req.body['old_staff_id'] ];
-    query('UPDATE "Staff" SET date=$1, staff_id=$2 WHERE date=$3 AND staff_id=$4', post, function(err, rows, result) {
+    query('UPDATE "Shift" SET "date"=$1, staff_id=$2 WHERE "date"=$3 AND staff_id=$4', post, function(err, rows, result) {
         if(err) {
             console.error(err);
             getStaffMembers(req, function (staff_members) {
-                res.render('manage/shifts_edit', { error : err, staff_members: staff_members, data: {staff_id: post[0], date: post[1]}});
+                res.render('manage/shifts_edit', { error : err, staff_members: staff_members, data: {staff_id: post[1], date: post[0]}});
             } );
         } else {
             res.redirect('/manage/shifts/1');

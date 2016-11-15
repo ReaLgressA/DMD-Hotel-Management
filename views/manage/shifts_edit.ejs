@@ -81,10 +81,10 @@
         console.log("DATEPICKA");
         $( "#datepicker" ).datepicker();
         $( "#datepicker" ).datepicker( "option", "dateFormat", "yy-mm-dd" );
-        //$( "#datepicker" ).datepicker("setDate", new Data( ));
+        $( "#datepicker" ).datepicker("setDate", $( "input[type=hidden]#old_date" ).val());
     } );
     $(document).ready(function () {
-        console.log("VALUE:" + $( "#old-date" ).val() + " ---");
-        console.log("VALUE:" + $( "#datepicker" ).val() + " ---");
+        console.log("VALUE_old-date:" + $( "input[type=hidden]#old_date" ).val() + " ---");
+        console.log("VALUE:_dp" + $( "#datepicker" ).val() + " ---");
     })
 </script>
