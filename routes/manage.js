@@ -2,6 +2,8 @@ var express = require('express');
 var router = express.Router();
 var query = require('../pgSetup');
 
+var passwordHash = require('password-hash');
+
 var hotel_col_names = ['Id', 'Name', 'Description', '     Stars', 'Country', 'City'];
 
 router.post('/pageRowsUpdate', function (req, res, next) {
@@ -316,20 +318,147 @@ router.post('/shifts/edit', function (req, res) {
 
 
 
+//USERS
+var users_col_names = ['Id', 'Role', 'E-mail', 'Password hash'];
 
-
-
-//DISCOUNTS
-
-
-router.get('/discounts', function(req, res, next) {
-    query('SELECT * FROM public."Discount"', function(err, rows, result) {
+var getUserRoles = function ( callback) {
+    query('SELECT * FROM "User_role"', function(err, rows, result) {
+        if(err) {
+            console.log(err);
+            callback([]);
+        }
+        callback(rows);
+    });
+};
+router.get('/users/create', function(req, res) {
+    getUserRoles(function (user_roles) {
+        res.render('manage/users_create', { error: undefined,  user_roles: user_roles });
+    });
+});
+router.post('/users/create', function (req, res) {
+    var pass = req.body['password'];
+    pass = passwordHash.generate(pass);
+    var post = [req.body['role_id'], req.body['email'], pass];
+    query('INSERT INTO "User" (role_id, email, pass_hash) VALUES($1, $2, $3)', post, function(err, rows, result) {
+        if(err) {
+            console.error(err);
+            getUserRoles(function (user_roles) {
+                res.render('manage/users_create', { error : err,  user_roles: user_roles });
+            });
+        } else {
+            res.redirect('/manage/users/1');
+        }
+    });
+});
+router.get('/users/:page', function(req, res, next) {
+    var args = [req.app.locals.rowsPerPage, (req.params.page - 1) * req.app.locals.rowsPerPage];
+    query('SELECT *, count(*) OVER() AS full_count FROM "User" ORDER BY user_id ASC LIMIT $1 OFFSET $2', args, function(err, rows, result) {
         if(err) {
             console.error(err);
         }
-        res.render('manage', { title: 'Discount management', data: rows, column_names: result.fields });
+        getUserRoles(function (user_roles) {
+            console.log(rows);
+            res.render('manage/users', { title: 'User management: ', user_roles: user_roles, data: rows, column_names: users_col_names, pageName: 'users', pageId: req.params.page, rowsTotal: (rows != undefined && rows.length > 0) ? rows[0]['full_count'] : 0});
+        } );
     });
 });
+router.get('/users', function(req, res, next) {
+    res.redirect('/manage/users/1');
+});
+router.get('/users/remove/:id', function(req, res) {
+    query('DELETE FROM "User" WHERE user_id=$1', [req.params.id],function(err, rows, result) {
+        if(err) {
+            console.error(err);
+        }
+        res.redirect('/manage/users/1');
+    });
+});
+router.get('/users/edit/:id', function(req, res) {
+    query('SELECT * FROM "User" WHERE user_id=$1', [req.params.id],function(err, rows, result) {
+        if(err) {
+            console.error(err);
+        }
+        getUserRoles( function (user_roles) {
+            console.log("SHOW EDIT: " + rows[0]['email'] + "   " + rows[0]['role_id']);
+            res.render('manage/users_edit', {error: err, data: rows[0], user_roles: user_roles, password: ''});
+        } );
+    });
+});
+router.post('/users/edit', function (req, res) {
+    var pass = req.body['password'];
+    var sql = 'UPDATE "User" SET role_id=$1, $2 pass_hash=$3 WHERE user_id=$4';
+    if(req.body['email'].length > 0 ) {
+        sql = 'UPDATE "User" SET role_id=$1, email=$2, pass_hash=$3 WHERE user_id=$4';
+    }
+    var post = [req.body['role_id'], req.body['email'], passwordHash.generate(pass), req.body['user_id']];
+    console.log("POST: " + post);
+    query(sql, post, function(err, rows, result) {
+        if(err) {
+            console.error(err);
+            getUserRoles( function (user_roles) {
+                res.render('manage/users_edit', { error : err, password: pass, user_roles: user_roles, data: {user_id: post[3], role_id: post[0],
+                    email: post[1] } } );
+            } );
+        } else {
+            res.redirect('/manage/users/1');
+        }
+    });
+});
+
+
+
+//Clients
+// var clients_col_names = ['Id', 'Role', 'E-mail', 'Password hash'];
+//
+// var getUserRoles = function ( callback) {
+//     query('SELECT * FROM "User_role"', function(err, rows, result) {
+//         if(err) {
+//             console.log(err);
+//             callback([]);
+//         }
+//         callback(rows);
+//     });
+// };
+// router.get('/users/create', function(req, res) {
+//     getUserRoles(function (user_roles) {
+//         res.render('manage/users_create', { error: undefined,  user_roles: user_roles });
+//     });
+// });
+// router.post('/users/create', function (req, res) {
+//     var pass = req.body['password'];
+//     pass = passwordHash.generate(pass);
+//     var post = [req.body['role_id'], req.body['email'], pass];
+//     query('INSERT INTO "User" (role_id, email, pass_hash) VALUES($1, $2, $3)', post, function(err, rows, result) {
+//         if(err) {
+//             console.error(err);
+//             getUserRoles(function (user_roles) {
+//                 res.render('manage/users_create', { error : err,  user_roles: user_roles });
+//             });
+//         } else {
+//             res.redirect('/manage/users/1');
+//         }
+//     });
+// });
+// router.get('/users/:page', function(req, res, next) {
+//     var args = [req.app.locals.rowsPerPage, (req.params.page - 1) * req.app.locals.rowsPerPage];
+//     query('SELECT *, count(*) OVER() AS full_count FROM "User" ORDER BY user_id ASC LIMIT $1 OFFSET $2', args, function(err, rows, result) {
+//         if(err) {
+//             console.error(err);
+//         }
+//         getUserRoles(function (user_roles) {
+//             console.log(rows);
+//             res.render('manage/users', { title: 'User management: ', user_roles: user_roles, data: rows, column_names: users_col_names, pageName: 'users', pageId: req.params.page, rowsTotal: (rows != undefined && rows.length > 0) ? rows[0]['full_count'] : 0});
+//         } );
+//     });
+// });
+// router.get('/clients', function(req, res, next) {
+//     res.redirect('/manage/users/1');
+// });
+
+
+
+//RESERVATIONS
+
 router.get('/reservations', function(req, res, next) {
     query('SELECT * FROM public."Reservation"', function(err, rows, result) {
         if(err) {
@@ -338,20 +467,5 @@ router.get('/reservations', function(req, res, next) {
         res.render('manage', { title: 'Reservation management', data: rows, column_names: result.fields });
     });
 });
-router.get('/clients', function(req, res, next) {
-    query('SELECT * FROM public."Client"', function(err, rows, result) {
-        if(err) {
-            console.error(err);
-        }
-        res.render('manage', { title: 'Client management', data: rows, column_names: result.fields });
-    });
-});
-router.get('/users', function(req, res, next) {
-    query('SELECT * FROM public."User"', function(err, rows, result) {
-        if(err) {
-            console.error(err);
-        }
-        res.render('manage', { title: 'User management', data: rows, column_names: result.fields });
-    });
-});
+
 module.exports = router;

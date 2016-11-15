@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta charset="utf-8">
+    <title>Hotel management system</title>
+    <link rel="stylesheet" href="/bootstrap/css/bootstrap.css">
+    <link rel="stylesheet" href="/jquery-ui/jquery-ui.min.css"/>
+    <link rel="stylesheet" href="/stylesheets/style_manage.css">
+    <link rel="stylesheet" href="/form_helpers/css/bootstrap-formhelpers.min.css">
+    <link rel="stylesheet" href="/stylesheets/star-rating.css">
+    <script src="/javascripts/jquery-2.2.3.js" type="text/javascript"></script>
+    <script src="/bootstrap/js/bootstrap.min.js" type="text/javascript"></script>
+    <script src="/jquery-ui/jquery-ui.min.js" type="text/javascript"></script>
+    <script src="/form_helpers/js/bootstrap-formhelpers.min.js" type="text/javascript"></script>
+    <%if(error) {%>
+    <script>
+        $( function() {
+            $( "#dialog" ).dialog({
+                modal: true,
+                buttons: {
+                    Ok: function() {
+                        $( this ).dialog( "close" );
+                    }
+                }
+            });
+        } );
+    </script>
+    <%}%>
+</head>
+<body>
+
+<%if(error) {%>
+<div id="dialog" title="Error">
+    <p>
+        <span class="ui-icon  ui-icon-alert " style="float:left; margin:0 7px 50px 0;"></span>
+        <%=error%>
+    </p>
+</div>
+<%}%>
+
+<% include ../templates/header_m.ejs %>
+<content>
+    <div class="container">
+        <form class="details generic-edit-block" method="post" action="/manage/users/create">
+            <div class=" form-"><h2 style="float: left; width: 100%"> Create user </h2></div>
+            <label for="role_id">User role</label>
+            <div class=form-group">
+                <select class="form-control" style="margin-bottom: 20px" name="role_id" id="role_id" >
+                    <%for( var i = 0; i < user_roles.length; ++i) {%>
+                    <option value="<%=user_roles[i]['role_id']%>" ><%=user_roles[i]['role_name']%></option>
+                    <%}%>
+                </select>
+            </div>
+            <label for="email">E-mail</label>
+            <div class=" form-group">
+                <input class="form-control" id="email" type="email" placeholder="E-mail" name="email" required/>
+            </div>
+            <label for="password">Password</label>
+            <div class=" form-group">
+                <input class="form-control" id="password" type="text" placeholder="Password" name="password" required/>
+            </div>
+            <input type="button" onclick="history.back();" value="Back">
+            <input style="float:right" type="submit" value="Apply" name="apply">
+        </form>
+    </div>
+</content>
+<% include ../templates/footer.ejs%>
+</body>
+</html>
