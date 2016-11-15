@@ -386,17 +386,17 @@ router.get('/users/edit/:id', function(req, res) {
 });
 router.post('/users/edit', function (req, res) {
     var pass = req.body['password'];
-    var sql = 'UPDATE "User" SET role_id=$1, $2 pass_hash=$3 WHERE user_id=$4';
-    if(req.body['email'].length > 0 ) {
-        sql = 'UPDATE "User" SET role_id=$1, email=$2, pass_hash=$3 WHERE user_id=$4';
+    var sql = 'UPDATE "User" SET role_id=$1, email=$2 WHERE user_id=$3';
+    if(req.body['password'].length > 0 ) {
+        sql = 'UPDATE "User" SET role_id=$1, email=$2, pass_hash=$4 WHERE user_id=$3';
     }
-    var post = [req.body['role_id'], req.body['email'], passwordHash.generate(pass), req.body['user_id']];
+    var post = req.body['password'].length == 0 ? [req.body['role_id'], req.body['email'], req.body['user_id']] : [req.body['role_id'], req.body['email'], req.body['user_id'], passwordHash.generate(pass)];
     console.log("POST: " + post);
     query(sql, post, function(err, rows, result) {
         if(err) {
             console.error(err);
             getUserRoles( function (user_roles) {
-                res.render('manage/users_edit', { error : err, password: pass, user_roles: user_roles, data: {user_id: post[3], role_id: post[0],
+                res.render('manage/users_edit', { error : err, password: pass, user_roles: user_roles, data: {user_id: post[2], role_id: post[0],
                     email: post[1] } } );
             } );
         } else {
@@ -408,52 +408,107 @@ router.post('/users/edit', function (req, res) {
 
 
 //Clients
-// var clients_col_names = ['Id', 'Role', 'E-mail', 'Password hash'];
-//
-// var getUserRoles = function ( callback) {
-//     query('SELECT * FROM "User_role"', function(err, rows, result) {
-//         if(err) {
-//             console.log(err);
-//             callback([]);
-//         }
-//         callback(rows);
-//     });
-// };
-// router.get('/users/create', function(req, res) {
-//     getUserRoles(function (user_roles) {
-//         res.render('manage/users_create', { error: undefined,  user_roles: user_roles });
-//     });
-// });
-// router.post('/users/create', function (req, res) {
-//     var pass = req.body['password'];
-//     pass = passwordHash.generate(pass);
-//     var post = [req.body['role_id'], req.body['email'], pass];
-//     query('INSERT INTO "User" (role_id, email, pass_hash) VALUES($1, $2, $3)', post, function(err, rows, result) {
-//         if(err) {
-//             console.error(err);
-//             getUserRoles(function (user_roles) {
-//                 res.render('manage/users_create', { error : err,  user_roles: user_roles });
-//             });
-//         } else {
-//             res.redirect('/manage/users/1');
-//         }
-//     });
-// });
-// router.get('/users/:page', function(req, res, next) {
-//     var args = [req.app.locals.rowsPerPage, (req.params.page - 1) * req.app.locals.rowsPerPage];
-//     query('SELECT *, count(*) OVER() AS full_count FROM "User" ORDER BY user_id ASC LIMIT $1 OFFSET $2', args, function(err, rows, result) {
-//         if(err) {
-//             console.error(err);
-//         }
-//         getUserRoles(function (user_roles) {
-//             console.log(rows);
-//             res.render('manage/users', { title: 'User management: ', user_roles: user_roles, data: rows, column_names: users_col_names, pageName: 'users', pageId: req.params.page, rowsTotal: (rows != undefined && rows.length > 0) ? rows[0]['full_count'] : 0});
-//         } );
-//     });
-// });
-// router.get('/clients', function(req, res, next) {
-//     res.redirect('/manage/users/1');
-// });
+var clients_col_names = ['Email', 'Name', 'Surname', 'Member since', 'Gender', 'SSN', 'Phone'];
+
+router.get('/clients/create', function(req, res) {
+    res.render('manage/clients_create', { error: undefined });
+});
+router.post('/clients/create', function (req, res) {
+    var pass = req.body['password'];
+    pass = passwordHash.generate(pass);
+    getUserRoles(function (roles) {
+        var role_id = 1;
+        for(var i = 0; i < roles.length; ++i) {
+            if(roles[i]['role_name'] == 'Client') {
+                role_id = roles[i]['role_id'];
+                break;
+            }
+        }
+        var post_user = [role_id, req.body['email'], pass];
+        query('INSERT INTO "User" (role_id, email, pass_hash) VALUES($1, $2, $3) RETURNING user_id', post_user, function(err, user_rows, result) {
+            if(err) {
+                console.error(err);
+                res.render('manage/clients_create', { error : err});
+            } else {
+                var post = [user_rows[0]['user_id'], req.body['first_name'], req.body['last_name'], req.body['gender'], req.body['ssn_code'], req.body['phone']];
+                query('INSERT INTO "Client" (user_id, first_name, last_name, member_since, gender, ssn_code, phone_no) VALUES($1, $2, $3, NOW(), $4, $5, $6)', post, function(err, rows, result) {
+                    if(err) {
+                        console.error(err);
+                        res.render('manage/clients_create', { error : err });
+                    } else {
+                        res.redirect('/manage/clients/1');
+                    }
+                });
+
+            }
+        });
+    });
+});
+router.get('/clients/:page', function(req, res, next) {
+    var args = [req.app.locals.rowsPerPage, (req.params.page - 1) * req.app.locals.rowsPerPage, 'YYYY-MM-DD'];
+    query('SELECT client_id, "Client".user_id, email, first_name, last_name, TO_CHAR(member_since, $3)' +
+        ' AS member_since, gender, ssn_code, phone_no, count(*) OVER() AS full_count FROM "Client","User" ' +
+        ' WHERE "Client".user_id="User".user_id ORDER BY last_name, first_name ASC LIMIT $1 OFFSET $2', args, function(err, rows, result) {
+        if(err) {
+            console.error(err);
+        }
+        res.render('manage/clients', { title: 'Client management', data: rows, column_names: clients_col_names, pageName: 'clients', pageId: req.params.page, rowsTotal: (rows != undefined && rows.length > 0) ? rows[0]['full_count'] : 0});
+    });
+});
+router.get('/clients', function(req, res, next) {
+    res.redirect('/manage/clients/1');
+});
+router.get('/clients/remove/:id', function(req, res) {
+    query('DELETE FROM "Client" WHERE client_id=$1', [req.params.id],function(err, rows, result) {
+        if(err) {
+            console.error(err);
+        }
+        res.redirect('/manage/clients/1');
+    });
+});
+router.get('/clients/edit/:id', function(req, res) {
+    query('SELECT client_id, "Client".user_id, email, first_name, last_name, TO_CHAR(member_since, $1)' +
+            ' AS member_since, gender, ssn_code, phone_no FROM "Client","User" WHERE "Client".user_id="User".user_id ' +
+            ' AND client_id=$2', ['YYYY-MM-DD', req.params.id],function(err, rows, result) {
+        if(err) {
+            console.error(err);
+        }
+        console.log(rows[0]);
+        res.render('manage/clients_edit', {error: err, data: rows[0], password: ''});
+    });
+});
+router.post('/clients/edit', function (req, res) {
+    var pass = req.body['password'];
+    var sql = 'UPDATE "User" SET email=$1 WHERE user_id=$2';
+    if(req.body['password'].length > 0 ) {
+        sql = 'UPDATE "User" SET email=$1, pass_hash=$3 WHERE user_id=$2';
+    }
+    var post_user = req.body['password'].length == 0 ? [req.body['email'], req.body['user_id']] : [req.body['email'], req.body['user_id'], passwordHash.generate(pass)];
+    var post = [req.body['first_name'], req.body['last_name'], req.body['gender'], req.body['ssn_code'], req.body['phone'], req.body['client_id']];
+
+    console.log("POST_USER: " + post_user);
+    console.log("POST: " + post);
+
+    query(sql, post_user, function(err, rows_user, result) {
+        if(err) {
+            console.error(err);
+            res.render('manage/clients_edit', { error : err, password: pass, data: {user_id: post_user[1], email: post_user[0], first_name: post[0], last_name: post[1], gender:post[2],
+                        ssn_code: post[3], phone_no: post[4], client_id: post[5]} } );
+        } else {
+            query('UPDATE "Client" SET first_name=$1, last_name=$2, gender=$3, ssn_code=$4, phone_no=$5 WHERE client_id=$6', post, function(err, rows, result) {
+                if(err) {
+                    console.error(err);
+                    res.render('manage/clients_edit', { error : err, password: pass, data: {user_id: post_user[1], email: post_user[0], first_name: post[0], last_name: post[1], gender:post[2],
+                        ssn_code: post[3], phone_no: post[4], client_id: post[5]} } );
+                } else {
+                    res.redirect('/manage/clients/1');
+                }
+            });
+        }
+    });
+});
+
+
 
 
 

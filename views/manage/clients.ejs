@@ -26,20 +26,21 @@
                 <th><%=column_names[i]%></th>
                 <%}%>
                 <th></th>
-                <th class="fit"><button class="push-button" onclick="window.location.href='/manage/staff/create'">Create</button></th>
+                <th class="fit"><button class="push-button" onclick="window.location.href='/manage/clients/create'">Create</button></th>
             </tr>
             </thead>
             <tbody>
             <%for(var i=0; i<data.length; ++i) {%>
             <tr>
-                <th> <%=staff_roles[data[i]['role_id'] - 1]['name_of_role']%> </th>
+                <th> <%=data[i]['email']%> </th>
                 <th> <%=data[i]['first_name']%> </th>
                 <th> <%=data[i]['last_name']%> </th>
+                <th> <%=data[i]['member_since']%> </th>
                 <th> <%if(data[i]['gender']=='m') {%>Male<%} else {%>Female<%}%> </th>
                 <th> <%=data[i]['ssn_code']%> </th>
-                <th> <%=data[i]['salary']%> </th>
-                <th class="fit"><button class="push-button" onclick="window.location.href='/manage/staff/edit/' + '<%=data[i]['staff_id']%>'">Edit</button></th>
-                <th class="fit"><button class="push-button" onclick="window.location.href='/manage/staff/remove/' + '<%=data[i]['staff_id']%>'">Remove</button></th>
+                <th> <%=data[i]['phone_no']%> </th>
+                <th class="fit"><button class="push-button" onclick="window.location.href='/manage/clients/edit/' + '<%=data[i]['client_id']%>'">Edit</button></th>
+                <th class="fit"><button class="push-button" onclick="window.location.href='/manage/clients/remove/' + '<%=data[i]['client_id']%>'">Remove</button></th>
             </tr>
             <%}%>
             </tbody>
@@ -49,3 +50,6 @@
 <% include ../templates/footer.ejs%>
 </body>
 </html>
+
+
+
