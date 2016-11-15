@@ -234,13 +234,11 @@ router.post('/staff/edit', function (req, res) {
 
 
 
-
-
 //SHIFTS
 var shifts_col_names = ['Date', 'Staff member'];
 
-var getStaffMembers = function (callback) {
-    query('SELECT * FROM "Staff" WHERE hotel_id=$1', [req.app.locals.curHotel['hotel_id'] function(err, rows, result) {
+var getStaffMembers = function (req, callback) {
+    query('SELECT * FROM "Staff" WHERE hotel_id=$1', [req.app.locals.curHotel['hotel_id']], function(err, rows, result) {
         if(err) {
             console.log(err);
             callback([]);
@@ -250,53 +248,82 @@ var getStaffMembers = function (callback) {
 };
 
 router.get('/shifts/create', function(req, res) {
-    getStaffMembers(function (staff_members) {
-        res.render('manage/staff_create', { error: undefined,  staff_members: staff_members });
+    getStaffMembers(req, function (staff_members) {
+        res.render('manage/shifts_create', { error: undefined,  staff_members: staff_members });
     });
 });
 router.post('/shifts/create', function (req, res) {
-    var post = [req.body['hotel_id'], req.body['role_id'], req.body['first_name'], req.body['last_name'], req.body['gender'], req.body['ssn_code'], req.body['salary']];
-    query('INSERT INTO "Staff" (hotel_id, role_id, first_name, last_name, gender, ssn_code, salary) VALUES($1, $2, $3, $4, $5, $6, $7)', post, function(err, rows, result) {
+    var post = [req.body['date'], req.body['staff_id']];
+    query('INSERT INTO "Shift" (date, staff_id) VALUES($1, $2)', post, function(err, rows, result) {
         if(err) {
             console.error(err);
-            getStaffMembers(function (staff_members) {
-                res.render('manage/staff_create', { error : err,  staff_members: staff_members });
+            getStaffMembers(req, function (staff_members) {
+                res.render('manage/shifts_create', { error : err,  staff_members: staff_members });
             });
         } else {
-            res.redirect('/manage/staff/1');
+            console.log("OK");
+            res.redirect('/manage/shifts/1');
         }
     });
 });
 router.get('/shifts/:page', function(req, res, next) {
-    var args = [req.app.locals.curHotel['hotel_id'], req.app.locals.rowsPerPage, (req.params.page - 1) * req.app.locals.rowsPerPage];
-    query('SELECT "Shift".staff_id, date, count(*) OVER() AS full_count FROM "Shift", "Staff" WHERE "Staff".staff_id = "Shift".staff_id AND "Staff".hotel_id=$1 ORDER BY date, first_name DESC LIMIT $2 OFFSET $3', args, function(err, rows, result) {
+    var args = [req.app.locals.curHotel['hotel_id'], req.app.locals.rowsPerPage, (req.params.page - 1) * req.app.locals.rowsPerPage, "YYYY-MM-DD"];
+    query('SELECT "Shift".staff_id, TO_CHAR(date, $4) AS date, count(*) OVER() AS full_count FROM "Shift",' +
+        ' "Staff" WHERE "Staff".staff_id = "Shift".staff_id AND "Staff".hotel_id=$1 ORDER BY date DESC,' +
+        ' first_name ASC LIMIT $2 OFFSET $3', args, function(err, rows, result) {
         if(err) {
             console.error(err);
         }
-        getStaffMembers( function (staff_members) {
-            res.render('manage/staff', { title: 'Shift management: ' + req.app.locals.curHotel['name'], staff_members: staff_members, data: rows, column_names: shifts_col_names, pageName: 'shifts', pageId: req.params.page, rowsTotal: (rows != undefined && rows.length > 0) ? rows[0]['full_count'] : 0});
+        getStaffMembers(req, function (staff_members) {
+            console.log(rows);
+            res.render('manage/shifts', { title: 'Shift management: ' + req.app.locals.curHotel['name'], staff_members: staff_members, data: rows, column_names: shifts_col_names, pageName: 'shifts', pageId: req.params.page, rowsTotal: (rows != undefined && rows.length > 0) ? rows[0]['full_count'] : 0});
         } );
     });
 });
-router.get('/staff', function(req, res, next) {
-    res.redirect('/manage/staff/1');
-});
-
-
-
-
-
-
-
-
 router.get('/shifts', function(req, res, next) {
-    query('SELECT * FROM public."Shift"', function(err, rows, result) {
+    res.redirect('/manage/shifts/1');
+});
+router.get('/shifts/remove/:id', function(req, res) {
+    query('DELETE FROM "Shift" WHERE staff_id=$1 AND date=$2', [req.params.id, req.query.date],function(err, rows, result) {
         if(err) {
             console.error(err);
         }
-        res.render('manage', { title: 'Shift management', data: rows, column_names: result.fields });
+        res.redirect('/manage/shifts/1');
     });
 });
+router.get('/shifts/edit/:id', function(req, res) {
+    query('SELECT * FROM "Shift" WHERE staff_id=$1 AND date=$2', [req.params.id, req.query.date],function(err, rows, result) {
+        if(err) {
+            console.error(err);
+        }
+        getStaffMembers(req, function (staff_members) {
+            console.log(rows[0]);
+            res.render('manage/shifts_edit', {error: err, data: rows[0], staff_members: staff_members});
+        } );
+    });
+});
+router.post('/shifts/edit', function (req, res) {
+    var post = [req.body['date'], req.body['staff_id'], req.body['old_date'], req.body['old_staff_id'] ];
+    query('UPDATE "Staff" SET date=$1, staff_id=$2 WHERE date=$3 AND staff_id=$4', post, function(err, rows, result) {
+        if(err) {
+            console.error(err);
+            getStaffMembers(req, function (staff_members) {
+                res.render('manage/shifts_edit', { error : err, staff_members: staff_members, data: {staff_id: post[0], date: post[1]}});
+            } );
+        } else {
+            res.redirect('/manage/shifts/1');
+        }
+    });
+});
+
+
+
+
+
+
+//DISCOUNTS
+
+
 router.get('/discounts', function(req, res, next) {
     query('SELECT * FROM public."Discount"', function(err, rows, result) {
         if(err) {

@@ -15,11 +15,6 @@
                 <li class = "nav-button"><button class="nav-button" onclick="location.href='/manage/users'" >Users</button></li>
                 <% if(user != undefined) {%>
                 <% } %>
-                <% if(curHotel) {%>
-                    <div class="navbar-info" >Hotel: <%=curHotel['name']%></div>
-                <% } else { %>
-                    <div class="navbar-info" >No hotel selected</div>
-                <% } %>
             </ul>
         </nav>
     </div>
