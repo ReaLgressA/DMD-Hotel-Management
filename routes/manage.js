@@ -486,9 +486,6 @@ router.post('/clients/edit', function (req, res) {
     var post_user = req.body['password'].length == 0 ? [req.body['email'], req.body['user_id']] : [req.body['email'], req.body['user_id'], passwordHash.generate(pass)];
     var post = [req.body['first_name'], req.body['last_name'], req.body['gender'], req.body['ssn_code'], req.body['phone'], req.body['client_id']];
 
-    console.log("POST_USER: " + post_user);
-    console.log("POST: " + post);
-
     query(sql, post_user, function(err, rows_user, result) {
         if(err) {
             console.error(err);
@@ -508,18 +505,128 @@ router.post('/clients/edit', function (req, res) {
     });
 });
 
-
-
-
-
 //RESERVATIONS
+var reservations_col_names = ['Id', 'Client', 'Room number', 'Room type', 'Check-in', 'Check-out',
+    'Status', 'Billing date', 'Total price'];
 
-router.get('/reservations', function(req, res, next) {
-    query('SELECT * FROM public."Reservation"', function(err, rows, result) {
+var getHotelRooms = function (hotel_id, callback) {
+    query('SELECT room_id, type_name, capacity, number, price FROM "Room","Room_type" WHERE "Room".room_type_id="Room_type".room_type_id AND hotel_id=$1', [hotel_id], function(err, rows, result) {
+        if(err) {
+            console.log(err);
+            callback([]);
+        }
+        callback(rows);
+    });
+};
+
+var getClients = function (callback) {
+    query('SELECT * FROM "Client"', function(err, rows, result) {
+        if(err) {
+            console.log(err);
+            callback([]);
+        }
+        callback(rows);
+    });
+};
+
+router.get('/reservations/create', function(req, res) {
+    getHotelRooms(req.app.locals.curHotel['hotel_id'], function (rooms) {
+        getClients(function (clients) {
+            res.render('manage/reservations_create', { error: undefined, rooms: rooms, clients: clients });
+        })
+    });
+});
+router.post('/reservations/create', function (req, res) {
+    var sql = 'INSERT INTO "Reservation" (client_id, room_id, status, date_in, date_out)' +
+        ' VALUES($1, $2, $3, $4, $5)';
+    var post = [req.body['client_id'], JSON.parse(req.body['room'])['room_id'], req.body['status'], req.body['date_in'], req.body['date_out']];
+    if(req.body['date_bill'] != "" && req.body['total_price'] != "") {
+        post.push(req.body['date_bill']);
+        post.push(req.body['total_price']);
+        sql = 'INSERT INTO "Reservation" (client_id, room_id, status, date_in, date_out, billing_date, total_price)' +
+            ' VALUES($1, $2, $3, $4, $5, $6, $7)';
+    } else if(req.body['date_bill'] != "") {
+        post.push(req.body['date_bill']);
+        sql = 'INSERT INTO "Reservation" (client_id, room_id, status, date_in, date_out, billing_date)' +
+            ' VALUES($1, $2, $3, $4, $5, $6)';
+    } else if(req.body['total_price'] != "") {
+        post.push(req.body['total_price']);
+        sql = 'INSERT INTO "Reservation" (client_id, room_id, status, date_in, date_out, total_price)' +
+            ' VALUES($1, $2, $3, $4, $5, $6)';
+    }
+    console.log(sql, post);
+    query(sql, post, function(err, rows, result) {
+        if(err) {
+            console.error(err);
+            getHotelRooms(req.app.locals.curHotel['hotel_id'], function (rooms) {
+                getClients(function (clients) {
+                    res.render('manage/reservations_create', { error: undefined, rooms: rooms, clients: clients });
+                })
+            });
+        } else {
+            res.redirect('/manage/reservations/1');
+        }
+    });
+});
+router.get('/reservations/:page', function(req, res, next) {
+    var args = [req.app.locals.curHotel['hotel_id'], req.app.locals.rowsPerPage, (req.params.page - 1) * req.app.locals.rowsPerPage, "YYYY-MM-DD"];
+    query('SELECT reservation_id, "Client".client_id, first_name, last_name, "Room".room_id, number AS room_number, type_name AS room_type_name,' +
+        'TO_CHAR(date_in, $4) AS date_in, TO_CHAR(date_out, $4) AS date_out, status, TO_CHAR(billing_date, $4) AS ' +
+        'billing_date, total_price, count(*) OVER() AS full_count FROM "Reservation", "Client", "Room", "Room_type" ' +
+        'WHERE hotel_id=$1 AND "Reservation".room_id="Room".room_id AND "Room".room_type_id="Room_type".room_type_id ' +
+        'AND "Client".client_id="Reservation".client_id ORDER BY date_in DESC, date_out ASC LIMIT $2 OFFSET $3', args, function(err, rows, result) {
         if(err) {
             console.error(err);
         }
-        res.render('manage', { title: 'Reservation management', data: rows, column_names: result.fields });
+        res.render('manage/reservations', { title: 'Reservation management: ' + req.app.locals.curHotel['name'],
+                data: rows, column_names: reservations_col_names, pageName: 'reservations', pageId: req.params.page,
+                rowsTotal: (rows != undefined && rows.length > 0) ? rows[0]['full_count'] : 0});
+    });
+});
+router.get('/reservations', function(req, res, next) {
+    res.redirect('/manage/reservations/1');
+});
+router.get('/reservations/remove/:id', function(req, res) {
+    query('DELETE FROM "Reservation" WHERE reservation_id=$1', [req.params.id],function(err, rows, result) {
+        if(err) {
+            console.error(err);
+        }
+        res.redirect('/manage/reservations/1');
+    });
+});
+router.get('/reservations/edit/:id', function(req, res) {
+    console.log("EDIT ID: "+ req.params.id);
+    var args = ["YYYY-MM-DD", req.params.id];
+    query('SELECT reservation_id, client_id, "Room".room_id, number AS room_number, type_name AS room_type_name,' +
+        'TO_CHAR(date_in, $1) AS date_in, TO_CHAR(date_out, $1) AS date_out, status, TO_CHAR(billing_date, $1) AS ' +
+        'billing_date, total_price FROM "Reservation", "Room", "Room_type" WHERE reservation_id=$2 AND ' +
+        '"Reservation".room_id="Room".room_id AND "Room".room_type_id="Room_type".room_type_id', args, function(err, rows, result) {
+        if(err) {
+            console.error(err);
+        }
+        getHotelRooms(req.app.locals.curHotel['hotel_id'], function (rooms) {
+            getClients(function (clients) {
+                console.log("EDIT ROW: " + rows[0]);
+                res.render('manage/reservations_edit', { error: undefined, data: rows[0], rooms: rooms, clients: clients });
+            })
+        });
+    });
+});
+router.post('/reservations/edit', function (req, res) {
+    var post = [req.body['client_id'], JSON.parse(req.body['room'])['room_id'], req.body['status'], req.body['date_in'],
+        req.body['date_out'], req.body['date_bill'], req.body['total_price'], req.body['reservation_id']];
+    query('UPDATE "Reservation" SET client_id = $1, room_id=$2, status=$3, date_in=$4, date_out=$5, billing_date=$6, total_price=$7 WHERE reservation_id=$8', post, function(err, rows, result) {
+        if(err) {
+            console.error(err);
+            getHotelRooms(req.app.locals.curHotel['hotel_id'], function (rooms) {
+                getClients(function (clients) {
+                    res.render('manage/reservations_create', { error: undefined, rooms: rooms, clients: clients,
+                        data: {reservation_id: post[7], client_id: post[0], room_id: post[1], status: post[2], date_id: post[3], date_out: post[4], billing_date: post[5], total_price: post[6]}});
+                })
+            });
+        } else {
+            res.redirect('/manage/reservations/1');
+        }
     });
 });
 

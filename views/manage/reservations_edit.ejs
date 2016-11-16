@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta charset="utf-8">
+    <title>Hotel management system</title>
+    <link rel="stylesheet" href="/bootstrap/css/bootstrap.css">
+    <link rel="stylesheet" href="/jquery-ui/jquery-ui.min.css"/>
+    <link rel="stylesheet" href="/stylesheets/style_manage.css">
+    <link rel="stylesheet" href="/form_helpers/css/bootstrap-formhelpers.min.css">
+    <link rel="stylesheet" href="/stylesheets/star-rating.css">
+    <script src="/javascripts/jquery-2.2.3.js" type="text/javascript"></script>
+    <script src="/bootstrap/js/bootstrap.min.js" type="text/javascript"></script>
+    <script src="/jquery-ui/jquery-ui.min.js" type="text/javascript"></script>
+    <script src="/form_helpers/js/bootstrap-formhelpers.min.js" type="text/javascript"></script>
+
+    <%if(error) {%>
+    <script>
+        $( function() {
+            $( "#dialog" ).dialog({
+                modal: true,
+                buttons: {
+                    Ok: function() {
+                        $( this ).dialog( "close" );
+                    }
+                }
+            });
+        } );
+    </script>
+    <%}%>
+
+</head>
+<body>
+
+<%if(error) {%>
+<div id="dialog" title="Error">
+    <p>
+        <span class="ui-icon  ui-icon-alert " style="float:left; margin:0 7px 50px 0;"></span>
+        <%=error%>
+    </p>
+</div>
+<%}%>
+
+<% include ../templates/header_m.ejs %>
+<content>
+    <div class="container">
+        <form class="details generic-edit-block" method="post" action="/manage/reservations/edit">
+            <div class=" form-"><h2 style="float: left; width: 100%"> Edit reservation </h2></div>
+            <input type="hidden" id="reservation_id" name="reservation_id" value=<%=data['reservation_id']%> />
+            <input type="hidden" id="old_date_in" name="old_date_in" value=<%=data['date_in']%> />
+            <input type="hidden" id="old_date_out" name="old_date_out" value=<%=data['date_out']%> />
+            <input type="hidden" id="old_date_bill" name="old_date_bill" value=<%=data['billing_date']%> />
+            <label for="client_id">Client</label>
+            <div class=form-group">
+                <select class="form-control" style="margin-bottom: 20px" name="client_id" id="client_id" >
+                    <%for( var i = 0; i < clients.length; ++i) {%>
+                    <option value="<%=clients[i]['client_id']%>" <%if(data['client_id']==clients[i]['client_id']) {%>selected<%}%> ><%=clients[i]['last_name']%> <%=clients[i]['first_name']%> [#<%=clients[i]['client_id']%>]</option>
+                    <%}%>
+                </select>
+            </div>
+            <label for="room">Room</label>
+            <div class=form-group">
+                <select class="form-control" style="margin-bottom: 20px" name="room" id="room" >
+                    <%for( var i = 0; i < rooms.length; ++i) {%>
+                    <option value="<%= JSON.stringify(rooms[i]) %>" <%if(data['room_id']==rooms[i]['room_id']) {%>selected<%}%> > №<%=rooms[i]['number']%> <%=rooms[i]['type_name']%>[<%=rooms[i]['capacity']%>] <%=rooms[i]['price']%>$</option>
+                    <%}%>
+                </select>
+            </div>
+            <label for="status">Status</label>
+            <div class=form-group">
+                <select class="form-control" style="margin-bottom: 20px" name="status" id="status" >
+                    <option <%if(data['selected']=='Confirmed') {%>selected<%}%> >Confirmed</option>
+                    <option <%if(data['selected']=='Canceled') {%>selected<%}%> >Canceled</option>
+                    <option <%if(data['selected']=='Closed') {%>selected<%}%> >Closed</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="datepicker_in" style="width: 150px" >Check-in date</label>
+                <input type="text" id="datepicker_in" name="date_in"  size="30" required>
+            </div>
+            <div class="form-group">
+                <label for="datepicker_out" style="width: 150px" >Check-out date</label>
+                <input type="text" id="datepicker_out" name="date_out"  size="30" required>
+            </div>
+            <div class="form-group">
+                <label for="datepicker_bill" style="width: 150px" >Billing date</label>
+                <input type="text" id="datepicker_bill" name="date_bill"  size="30">
+            </div>
+            <label for="total_price">Total price $</label>
+            <div class=" form-group">
+                <input class="form-control" id="total_price" type="text" placeholder="Price $" name="total_price" value=<%=data['total_price']%> readonly/>
+            </div>
+            <input type="button" onclick="history.back();" value="Back">
+            <input style="float:right" type="submit" value="Apply" name="apply">
+        </form>
+    </div>
+</content>
+<% include ../templates/footer.ejs%>
+</body>
+</html>
+
+<script src="/javascripts/reservations.js" type="text/javascript"></script>
+<script>
+    $(function () {
+        $( "#datepicker_in" ).datepicker("setDate", $( "input[type=hidden]#old_date_in" ).val());
+        $( "#datepicker_out" ).datepicker("setDate", $( "input[type=hidden]#old_date_out" ).val());
+        $( "#datepicker_bill" ).datepicker("setDate", $( "input[type=hidden]#old_date_bill" ).val());
+    });
+</script>

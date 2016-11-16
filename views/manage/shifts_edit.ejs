@@ -47,18 +47,13 @@
 <content>
     <div class="container">
         <form class="details generic-edit-block" method="post" action="/manage/shifts/edit">
-
             <div class=" form-"><h2 style="float: left; width: 100%"> Create shift </h2></div>
             <input type="hidden" name="old_staff_id" value=<%=data['staff_id']%> />
             <input type="hidden" id="old_date" name="old_date" value=<%=data['date']%> />
-
-
-
             <div class="form-group">
                 <label for="staff_id">Date</label>
                 <input type="text" id="datepicker" name="date" size="30" required>
             </div>
-
             <label for="staff_id">Staff member</label>
             <div class=form-group">
                 <select class="form-control" style="margin-bottom: 20px" name="staff_id" id="staff_id" >
@@ -67,7 +62,6 @@
                     <%}%>
                 </select>
             </div>
-
             <input type="button" onclick="history.back();" value="Back">
             <input style="float:right" type="submit" value="Apply" name="apply">
         </form>
@@ -78,13 +72,8 @@
 </html>
 <script>
     $( function() {
-        console.log("DATEPICKA");
         $( "#datepicker" ).datepicker();
         $( "#datepicker" ).datepicker( "option", "dateFormat", "yy-mm-dd" );
         $( "#datepicker" ).datepicker("setDate", $( "input[type=hidden]#old_date" ).val());
     } );
-    $(document).ready(function () {
-        console.log("VALUE_old-date:" + $( "input[type=hidden]#old_date" ).val() + " ---");
-        console.log("VALUE:_dp" + $( "#datepicker" ).val() + " ---");
-    })
 </script>
