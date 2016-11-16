@@ -1,10 +1,11 @@
 <header>
     <div id="nav-menu">
         <div class="logo">
-            <h1><a href="/" class="logo">Hotel Management</a><h1>
+            <h1><a href="/manage" class="logo">Hotel Management</a><h1>
         </div>
         <nav>
             <ul class="navbar">
+                <% if(user != undefined) {%>
                 <li class = "nav-button"><button class="nav-button" onclick="location.href='/manage/hotels/1'" >Hotels</button></li>
                 <li class = "nav-button"><button class="nav-button" onclick="location.href='/manage/rooms'" <%if(curHotel == undefined){%>disabled<%}%> >Rooms</button></li>
                 <li class = "nav-button"><button class="nav-button" onclick="location.href='/manage/staff'" <%if(curHotel == undefined){%>disabled<%}%> >Staff</button></li>
@@ -12,7 +13,7 @@
                 <li class = "nav-button"><button class="nav-button" onclick="location.href='/manage/reservations'" <%if(curHotel == undefined){%>disabled<%}%> >Reservations</button></li>
                 <li class = "nav-button"><button class="nav-button" onclick="location.href='/manage/clients'" >Clients</button></li>
                 <li class = "nav-button"><button class="nav-button" onclick="location.href='/manage/users'" >Users</button></li>
-                <% if(user != undefined) {%>
+                <li class = "nav-button"><button class="nav-button" style="float:right" onclick="location.href='/manage/logout'" >Logout</button></li>
                 <% } %>
             </ul>
         </nav>

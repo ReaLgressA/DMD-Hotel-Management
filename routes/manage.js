@@ -6,14 +6,58 @@ var passwordHash = require('password-hash');
 
 var hotel_col_names = ['Id', 'Name', 'Description', '     Stars', 'Country', 'City'];
 
+router.get('/', function (req, res, next) {
+    if(req.app.locals.user == undefined) {
+        res.render('manage', {error: undefined});
+    } else {
+        res.redirect('/manage/hotels/1');
+    }
+});
+
+function CheckLoggedIn(req, res) {
+    if(req.app.locals.user == undefined || req.app.locals.user['role_name'] != 'Admin') {
+        res.redirect('/manage');
+        return false;
+    }
+    return true;
+}
+
+router.post('/login', function (req, res, next) {
+    var pass = req.body['password'];
+    var post = [req.body['email']];
+    query('SELECT user_id, email, "User".role_id AS role_id, pass_hash, role_name FROM "User", "User_role" WHERE email=$1 AND "User".role_id="User_role".role_id', post, function (err, rows, result) {
+        if(err) {
+            console.error(err);
+            res.render('manage', { error: err });
+            return;
+        }
+        if(rows.length > 0 && passwordHash.verify(pass, rows[0]['pass_hash']) && rows[0]['role_name']=='Admin' ) {
+            req.app.locals.user = rows[0];
+            res.redirect('/manage/hotels/1');
+        } else {
+            res.render('manage', { error: "Authorization failed: wrong email or password" });
+        }
+    });
+});
+router.get('/logout', function (req, res, next) {
+    req.app.locals.user = undefined;
+    res.redirect('/manage');
+});
+
 router.post('/pageRowsUpdate', function (req, res, next) {
     req.app.locals.rowsPerPage = req.body['rowsPerPage'];
     res.redirect(req.get('referer').substr(0, req.get('referer').lastIndexOf("/")));
 });
 router.get('/hotels/create', function(req, res) {
+    if(!CheckLoggedIn(req, res)) {
+        return;
+    }
     res.render('manage/hotels_create', { error: undefined });
 });
 router.post('/hotels/create', function (req, res) {
+    if(!CheckLoggedIn(req, res)) {
+        return;
+    }
     var postArray = [req.body['name'], req.body['desc'], req.body['rating'], req.body['country'], req.body['city']];
     query('INSERT INTO "Hotel" (name, description, stars, country_code, city) VALUES($1, $2, $3, $4, $5)', postArray, function(err, rows, result) {
         if(err) {
@@ -25,6 +69,9 @@ router.post('/hotels/create', function (req, res) {
     });
 });
 router.get('/hotels/:page', function(req, res, next) {
+    if(!CheckLoggedIn(req, res)) {
+        return;
+    }
     var pagination = [req.app.locals.rowsPerPage, (req.params.page - 1) * req.app.locals.rowsPerPage];
     query('SELECT *, count(*) OVER() AS full_count FROM "Hotel" ORDER BY hotel_id ASC LIMIT $1 OFFSET $2', pagination, function(err, rows, result) {
         if(err) {
@@ -37,6 +84,9 @@ router.get('/hotels', function(req, res, next) {
     res.redirect('/manage/hotels/1');
 });
 router.get('/hotels/remove/:id', function(req, res) {
+    if(!CheckLoggedIn(req, res)) {
+        return;
+    }
     query('DELETE FROM "Hotel" WHERE hotel_id=$1', [req.params.id],function(err, rows, result) {
         if(err) {
             console.error(err);
@@ -45,6 +95,9 @@ router.get('/hotels/remove/:id', function(req, res) {
     });
 });
 router.get('/hotels/edit/:id', function(req, res) {
+    if(!CheckLoggedIn(req, res)) {
+        return;
+    }
     query('SELECT * FROM "Hotel" WHERE hotel_id=$1', [req.params.id],function(err, rows, result) {
         if(err) {
             console.error(err);
@@ -53,6 +106,9 @@ router.get('/hotels/edit/:id', function(req, res) {
     });
 });
 router.post('/hotels/edit', function (req, res) {
+    if(!CheckLoggedIn(req, res)) {
+        return;
+    }
     var post = [req.body['name'], req.body['desc'], req.body['rating'], req.body['country'], req.body['city'], req.body['hotel_id']];
     query('UPDATE "Hotel" SET name=$1, description=$2, stars=$3, country_code=$4, city=$5 WHERE hotel_id=$6', post, function (err, results, fields) {
         if(err) {
@@ -64,6 +120,9 @@ router.post('/hotels/edit', function (req, res) {
     });
 });
 router.get('/hotels/select/:id', function(req, res) {
+    if(!CheckLoggedIn(req, res)) {
+        return;
+    }
     query('SELECT * FROM "Hotel" WHERE hotel_id=$1', [req.params.id],function(err, rows, result) {
         if(err) {
             console.error(err);
@@ -88,11 +147,17 @@ var getRoomTypes = function (callback) {
     });
 };
 router.get('/rooms/create', function(req, res) {
+    if(!CheckLoggedIn(req, res)) {
+        return;
+    }
     getRoomTypes(function (room_types) {
         res.render('manage/rooms_create', { error: undefined,  room_types: room_types });
     });
 });
 router.post('/rooms/create', function (req, res) {
+    if(!CheckLoggedIn(req, res)) {
+        return;
+    }
     var post = [req.body['hotel_id'], req.body['number'], req.body['room_type_id'], req.body['price'], req.body['smoke'] == undefined ? 0 : 1,
         req.body['wifi'] == undefined ? 0 : 1, req.body['tv'] == undefined ? 0 : 1, req.body['conditioner'] == undefined ? 0 : 1];
     query('INSERT INTO "Room" (hotel_id, number, room_type_id, price, smoke, wifi, tv, conditioner) VALUES($1, $2, $3, $4, $5, $6, $7, $8)', post, function(err, rows, result) {
@@ -107,6 +172,9 @@ router.post('/rooms/create', function (req, res) {
     });
 });
 router.get('/rooms/:page', function(req, res, next) {
+    if(!CheckLoggedIn(req, res)) {
+        return;
+    }
     var args = [req.app.locals.curHotel['hotel_id'], req.app.locals.rowsPerPage, (req.params.page - 1) * req.app.locals.rowsPerPage];
     query('SELECT *, count(*) OVER() AS full_count FROM "Room" WHERE hotel_id=$1 ORDER BY number ASC LIMIT $2 OFFSET $3', args, function(err, rows, result) {
         if(err) {
@@ -121,6 +189,9 @@ router.get('/rooms', function(req, res, next) {
     res.redirect('/manage/rooms/1');
 });
 router.get('/rooms/remove/:id', function(req, res) {
+    if(!CheckLoggedIn(req, res)) {
+        return;
+    }
     query('DELETE FROM "Room" WHERE room_id=$1', [req.params.id],function(err, rows, result) {
         if(err) {
             console.error(err);
@@ -129,6 +200,9 @@ router.get('/rooms/remove/:id', function(req, res) {
     });
 });
 router.get('/rooms/edit/:id', function(req, res) {
+    if(!CheckLoggedIn(req, res)) {
+        return;
+    }
     query('SELECT * FROM "Room" WHERE room_id=$1', [req.params.id],function(err, rows, result) {
         if(err) {
             console.error(err);
@@ -140,6 +214,9 @@ router.get('/rooms/edit/:id', function(req, res) {
     });
 });
 router.post('/rooms/edit', function (req, res) {
+    if(!CheckLoggedIn(req, res)) {
+        return;
+    }
     var post = [req.body['number'], req.body['room_type_id'], req.body['price'], req.body['smoke'] == undefined ? 0 : 1,
         req.body['wifi'] == undefined ? 0 : 1, req.body['tv'] == undefined ? 0 : 1, req.body['conditioner'] == undefined ? 0 : 1, req.body['room_id']];
     query('UPDATE "Room" SET number=$1, room_type_id=$2, price=$3, smoke=$4, wifi=$5, tv=$6, conditioner=$7 WHERE room_id=$8', post, function(err, rows, result) {
@@ -169,11 +246,17 @@ var getStaffRoles = function (callback) {
 };
 
 router.get('/staff/create', function(req, res) {
+    if(!CheckLoggedIn(req, res)) {
+        return;
+    }
     getStaffRoles(function (staff_roles) {
         res.render('manage/staff_create', { error: undefined,  staff_roles: staff_roles });
     });
 });
 router.post('/staff/create', function (req, res) {
+    if(!CheckLoggedIn(req, res)) {
+        return;
+    }
     var post = [req.body['hotel_id'], req.body['role_id'], req.body['first_name'], req.body['last_name'], req.body['gender'], req.body['ssn_code'], req.body['salary']];
     query('INSERT INTO "Staff" (hotel_id, role_id, first_name, last_name, gender, ssn_code, salary) VALUES($1, $2, $3, $4, $5, $6, $7)', post, function(err, rows, result) {
         if(err) {
@@ -187,6 +270,9 @@ router.post('/staff/create', function (req, res) {
     });
 });
 router.get('/staff/:page', function(req, res, next) {
+    if(!CheckLoggedIn(req, res)) {
+        return;
+    }
     var args = [req.app.locals.curHotel['hotel_id'], req.app.locals.rowsPerPage, (req.params.page - 1) * req.app.locals.rowsPerPage];
     query('SELECT *, count(*) OVER() AS full_count FROM "Staff" WHERE hotel_id=$1 ORDER BY last_name, first_name ASC LIMIT $2 OFFSET $3', args, function(err, rows, result) {
         if(err) {
@@ -201,6 +287,9 @@ router.get('/staff', function(req, res, next) {
     res.redirect('/manage/staff/1');
 });
 router.get('/staff/remove/:id', function(req, res) {
+    if(!CheckLoggedIn(req, res)) {
+        return;
+    }
     query('DELETE FROM "Staff" WHERE staff_id=$1', [req.params.id],function(err, rows, result) {
         if(err) {
             console.error(err);
@@ -209,6 +298,9 @@ router.get('/staff/remove/:id', function(req, res) {
     });
 });
 router.get('/staff/edit/:id', function(req, res) {
+    if(!CheckLoggedIn(req, res)) {
+        return;
+    }
     query('SELECT * FROM "Staff" WHERE staff_id=$1', [req.params.id],function(err, rows, result) {
         if(err) {
             console.error(err);
@@ -220,6 +312,9 @@ router.get('/staff/edit/:id', function(req, res) {
     });
 });
 router.post('/staff/edit', function (req, res) {
+    if(!CheckLoggedIn(req, res)) {
+        return;
+    }
     var post = [req.body['role_id'], req.body['first_name'], req.body['last_name'], req.body['gender'], req.body['ssn_code'], req.body['salary'], req.body['staff_id']];
     query('UPDATE "Staff" SET role_id=$1, first_name=$2, last_name=$3, gender=$4, ssn_code=$5, salary=$6 WHERE staff_id=$7', post, function(err, rows, result) {
         if(err) {
@@ -250,11 +345,17 @@ var getStaffMembers = function (req, callback) {
 };
 
 router.get('/shifts/create', function(req, res) {
+    if(!CheckLoggedIn(req, res)) {
+        return;
+    }
     getStaffMembers(req, function (staff_members) {
         res.render('manage/shifts_create', { error: undefined,  staff_members: staff_members });
     });
 });
 router.post('/shifts/create', function (req, res) {
+    if(!CheckLoggedIn(req, res)) {
+        return;
+    }
     var post = [req.body['date'], req.body['staff_id']];
     query('INSERT INTO "Shift" (date, staff_id) VALUES($1, $2)', post, function(err, rows, result) {
         if(err) {
@@ -268,6 +369,9 @@ router.post('/shifts/create', function (req, res) {
     });
 });
 router.get('/shifts/:page', function(req, res, next) {
+    if(!CheckLoggedIn(req, res)) {
+        return;
+    }
     var args = [req.app.locals.curHotel['hotel_id'], req.app.locals.rowsPerPage, (req.params.page - 1) * req.app.locals.rowsPerPage, "YYYY-MM-DD"];
     query('SELECT "Shift".staff_id, TO_CHAR(date, $4) AS date, count(*) OVER() AS full_count FROM "Shift",' +
         ' "Staff" WHERE "Staff".staff_id = "Shift".staff_id AND "Staff".hotel_id=$1 ORDER BY date DESC,' +
@@ -285,6 +389,9 @@ router.get('/shifts', function(req, res, next) {
     res.redirect('/manage/shifts/1');
 });
 router.get('/shifts/remove/:id', function(req, res) {
+    if(!CheckLoggedIn(req, res)) {
+        return;
+    }
     query('DELETE FROM "Shift" WHERE staff_id=$1 AND date=$2', [req.params.id, req.query.date],function(err, rows, result) {
         if(err) {
             console.error(err);
@@ -293,6 +400,9 @@ router.get('/shifts/remove/:id', function(req, res) {
     });
 });
 router.get('/shifts/edit/:id', function(req, res) {
+    if(!CheckLoggedIn(req, res)) {
+        return;
+    }
     query('SELECT staff_id, TO_CHAR(date, $3) AS "date" FROM "Shift" WHERE staff_id=$1 AND "date"=$2', [req.params.id, req.query.date, "YYYY-MM-DD"],function(err, rows, result) {
         if(err) {
             console.error(err);
@@ -303,6 +413,9 @@ router.get('/shifts/edit/:id', function(req, res) {
     });
 });
 router.post('/shifts/edit', function (req, res) {
+    if(!CheckLoggedIn(req, res)) {
+        return;
+    }
     var post = [req.body['date'], req.body['staff_id'], req.body['old_date'], req.body['old_staff_id'] ];
     query('UPDATE "Shift" SET "date"=$1, staff_id=$2 WHERE "date"=$3 AND staff_id=$4', post, function(err, rows, result) {
         if(err) {
@@ -411,9 +524,15 @@ router.post('/users/edit', function (req, res) {
 var clients_col_names = ['Email', 'Name', 'Surname', 'Member since', 'Gender', 'SSN', 'Phone'];
 
 router.get('/clients/create', function(req, res) {
+    if(!CheckLoggedIn(req, res)) {
+        return;
+    }
     res.render('manage/clients_create', { error: undefined });
 });
 router.post('/clients/create', function (req, res) {
+    if(!CheckLoggedIn(req, res)) {
+        return;
+    }
     var pass = req.body['password'];
     pass = passwordHash.generate(pass);
     getUserRoles(function (roles) {
@@ -445,6 +564,9 @@ router.post('/clients/create', function (req, res) {
     });
 });
 router.get('/clients/:page', function(req, res, next) {
+    if(!CheckLoggedIn(req, res)) {
+        return;
+    }
     var args = [req.app.locals.rowsPerPage, (req.params.page - 1) * req.app.locals.rowsPerPage, 'YYYY-MM-DD'];
     query('SELECT client_id, "Client".user_id, email, first_name, last_name, TO_CHAR(member_since, $3)' +
         ' AS member_since, gender, ssn_code, phone_no, count(*) OVER() AS full_count FROM "Client","User" ' +
@@ -459,6 +581,9 @@ router.get('/clients', function(req, res, next) {
     res.redirect('/manage/clients/1');
 });
 router.get('/clients/remove/:id', function(req, res) {
+    if(!CheckLoggedIn(req, res)) {
+        return;
+    }
     query('DELETE FROM "Client" WHERE client_id=$1', [req.params.id],function(err, rows, result) {
         if(err) {
             console.error(err);
@@ -467,6 +592,9 @@ router.get('/clients/remove/:id', function(req, res) {
     });
 });
 router.get('/clients/edit/:id', function(req, res) {
+    if(!CheckLoggedIn(req, res)) {
+        return;
+    }
     query('SELECT client_id, "Client".user_id, email, first_name, last_name, TO_CHAR(member_since, $1)' +
             ' AS member_since, gender, ssn_code, phone_no FROM "Client","User" WHERE "Client".user_id="User".user_id ' +
             ' AND client_id=$2', ['YYYY-MM-DD', req.params.id],function(err, rows, result) {
@@ -478,6 +606,9 @@ router.get('/clients/edit/:id', function(req, res) {
     });
 });
 router.post('/clients/edit', function (req, res) {
+    if(!CheckLoggedIn(req, res)) {
+        return;
+    }
     var pass = req.body['password'];
     var sql = 'UPDATE "User" SET email=$1 WHERE user_id=$2';
     if(req.body['password'].length > 0 ) {
@@ -530,6 +661,9 @@ var getClients = function (callback) {
 };
 
 router.get('/reservations/create', function(req, res) {
+    if(!CheckLoggedIn(req, res)) {
+        return;
+    }
     getHotelRooms(req.app.locals.curHotel['hotel_id'], function (rooms) {
         getClients(function (clients) {
             res.render('manage/reservations_create', { error: undefined, rooms: rooms, clients: clients });
@@ -537,6 +671,9 @@ router.get('/reservations/create', function(req, res) {
     });
 });
 router.post('/reservations/create', function (req, res) {
+    if(!CheckLoggedIn(req, res)) {
+        return;
+    }
     var sql = 'INSERT INTO "Reservation" (client_id, room_id, status, date_in, date_out)' +
         ' VALUES($1, $2, $3, $4, $5)';
     var post = [req.body['client_id'], JSON.parse(req.body['room'])['room_id'], req.body['status'], req.body['date_in'], req.body['date_out']];
@@ -554,7 +691,6 @@ router.post('/reservations/create', function (req, res) {
         sql = 'INSERT INTO "Reservation" (client_id, room_id, status, date_in, date_out, total_price)' +
             ' VALUES($1, $2, $3, $4, $5, $6)';
     }
-    console.log(sql, post);
     query(sql, post, function(err, rows, result) {
         if(err) {
             console.error(err);
@@ -569,6 +705,9 @@ router.post('/reservations/create', function (req, res) {
     });
 });
 router.get('/reservations/:page', function(req, res, next) {
+    if(!CheckLoggedIn(req, res)) {
+        return;
+    }
     var args = [req.app.locals.curHotel['hotel_id'], req.app.locals.rowsPerPage, (req.params.page - 1) * req.app.locals.rowsPerPage, "YYYY-MM-DD"];
     query('SELECT reservation_id, "Client".client_id, first_name, last_name, "Room".room_id, number AS room_number, type_name AS room_type_name,' +
         'TO_CHAR(date_in, $4) AS date_in, TO_CHAR(date_out, $4) AS date_out, status, TO_CHAR(billing_date, $4) AS ' +
@@ -587,6 +726,9 @@ router.get('/reservations', function(req, res, next) {
     res.redirect('/manage/reservations/1');
 });
 router.get('/reservations/remove/:id', function(req, res) {
+    if(!CheckLoggedIn(req, res)) {
+        return;
+    }
     query('DELETE FROM "Reservation" WHERE reservation_id=$1', [req.params.id],function(err, rows, result) {
         if(err) {
             console.error(err);
@@ -595,7 +737,9 @@ router.get('/reservations/remove/:id', function(req, res) {
     });
 });
 router.get('/reservations/edit/:id', function(req, res) {
-    console.log("EDIT ID: "+ req.params.id);
+    if(!CheckLoggedIn(req, res)) {
+        return;
+    }
     var args = ["YYYY-MM-DD", req.params.id];
     query('SELECT reservation_id, client_id, "Room".room_id, number AS room_number, type_name AS room_type_name,' +
         'TO_CHAR(date_in, $1) AS date_in, TO_CHAR(date_out, $1) AS date_out, status, TO_CHAR(billing_date, $1) AS ' +
@@ -606,13 +750,15 @@ router.get('/reservations/edit/:id', function(req, res) {
         }
         getHotelRooms(req.app.locals.curHotel['hotel_id'], function (rooms) {
             getClients(function (clients) {
-                console.log("EDIT ROW: " + rows[0]);
                 res.render('manage/reservations_edit', { error: undefined, data: rows[0], rooms: rooms, clients: clients });
             })
         });
     });
 });
 router.post('/reservations/edit', function (req, res) {
+    if(!CheckLoggedIn(req, res)) {
+        return;
+    }
     var post = [req.body['client_id'], JSON.parse(req.body['room'])['room_id'], req.body['status'], req.body['date_in'],
         req.body['date_out'], req.body['date_bill'], req.body['total_price'], req.body['reservation_id']];
     query('UPDATE "Reservation" SET client_id = $1, room_id=$2, status=$3, date_in=$4, date_out=$5, billing_date=$6, total_price=$7 WHERE reservation_id=$8', post, function(err, rows, result) {
