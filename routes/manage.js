@@ -670,6 +670,7 @@ router.get('/reservations/create', function(req, res) {
         })
     });
 });
+
 router.post('/reservations/create', function (req, res) {
     if(!CheckLoggedIn(req, res)) {
         return;
