@@ -208,7 +208,6 @@ router.get('/rooms/edit/:id', function(req, res) {
             console.error(err);
         }
         getRoomTypes( function (room_types) {
-            console.log(rows[0]);
             res.render('manage/rooms_edit', {error: err, data: rows[0], room_types: room_types});
         } );
     });
@@ -306,7 +305,6 @@ router.get('/staff/edit/:id', function(req, res) {
             console.error(err);
         }
         getStaffRoles( function (staff_roles) {
-            console.log(rows[0]);
             res.render('manage/staff_edit', {error: err, data: rows[0], staff_roles: staff_roles});
         } );
     });
@@ -380,7 +378,6 @@ router.get('/shifts/:page', function(req, res, next) {
             console.error(err);
         }
         getStaffMembers(req, function (staff_members) {
-            console.log(rows);
             res.render('manage/shifts', { title: 'Shift management: ' + req.app.locals.curHotel['name'], staff_members: staff_members, data: rows, column_names: shifts_col_names, pageName: 'shifts', pageId: req.params.page, rowsTotal: (rows != undefined && rows.length > 0) ? rows[0]['full_count'] : 0});
         } );
     });
@@ -470,7 +467,6 @@ router.get('/users/:page', function(req, res, next) {
             console.error(err);
         }
         getUserRoles(function (user_roles) {
-            console.log(rows);
             res.render('manage/users', { title: 'User management: ', user_roles: user_roles, data: rows, column_names: users_col_names, pageName: 'users', pageId: req.params.page, rowsTotal: (rows != undefined && rows.length > 0) ? rows[0]['full_count'] : 0});
         } );
     });
@@ -492,7 +488,6 @@ router.get('/users/edit/:id', function(req, res) {
             console.error(err);
         }
         getUserRoles( function (user_roles) {
-            console.log("SHOW EDIT: " + rows[0]['email'] + "   " + rows[0]['role_id']);
             res.render('manage/users_edit', {error: err, data: rows[0], user_roles: user_roles, password: ''});
         } );
     });
@@ -504,7 +499,6 @@ router.post('/users/edit', function (req, res) {
         sql = 'UPDATE "User" SET role_id=$1, email=$2, pass_hash=$4 WHERE user_id=$3';
     }
     var post = req.body['password'].length == 0 ? [req.body['role_id'], req.body['email'], req.body['user_id']] : [req.body['role_id'], req.body['email'], req.body['user_id'], passwordHash.generate(pass)];
-    console.log("POST: " + post);
     query(sql, post, function(err, rows, result) {
         if(err) {
             console.error(err);
@@ -601,7 +595,6 @@ router.get('/clients/edit/:id', function(req, res) {
         if(err) {
             console.error(err);
         }
-        console.log(rows[0]);
         res.render('manage/clients_edit', {error: err, data: rows[0], password: ''});
     });
 });
